@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Editor de CV - CVFácil</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#0b55cf",
+              "primary-container": "#3870ea",
+              "surface": "#f8f9fa",
+              "inverse-surface": "#2e3132",
+              "on-primary-container": "#ffffff",
+              "tertiary": "#1a6c23",
+              "tertiary-container": "#37863a",
+              "on-error-container": "#93000a",
+              "surface-container-highest": "#e1e3e4",
+              "secondary-fixed-dim": "#bac7de",
+              "on-surface": "#191c1d",
+              "secondary-container": "#d6e3fb",
+              "inverse-primary": "#b2c5ff",
+              "surface-container-high": "#e7e8e9",
+              "on-secondary": "#ffffff",
+              "on-tertiary-fixed-variant": "#005312",
+              "on-surface-variant": "#414754",
+              "error-container": "#ffdad6",
+              "surface-container": "#edeeef",
+              "surface-tint": "#0c56d0",
+              "surface-dim": "#d9dadb",
+              "secondary-fixed": "#d6e3fb",
+              "primary-fixed": "#dae2ff",
+              "on-primary-fixed": "#001848",
+              "on-background": "#191c1d",
+              "surface-container-low": "#f3f4f5",
+              "background": "#f8f9fa",
+              "tertiary-fixed": "#a3f69c",
+              "on-secondary-container": "#586579",
+              "on-tertiary-container": "#ffffff",
+              "on-tertiary": "#ffffff",
+              "error": "#ba1a1a",
+              "outline-variant": "#c1c6d6",
+              "on-error": "#ffffff",
+              "on-primary-fixed-variant": "#0040a2",
+              "on-primary": "#ffffff",
+              "tertiary-fixed-dim": "#88d982",
+              "primary-fixed-dim": "#b2c5ff",
+              "surface-bright": "#f8f9fa",
+              "on-secondary-fixed-variant": "#3b485a",
+              "on-tertiary-fixed": "#002204",
+              "surface-variant": "#e1e3e4",
+              "surface-container-lowest": "#ffffff",
+              "secondary": "#525f73",
+              "inverse-on-surface": "#f0f1f2",
+              "outline": "#727785",
+              "on-surface": "#191c1d"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .ai-shimmer {
+        background: linear-gradient(90deg, #a3f69c 0%, #d6e3fb 50%, #a3f69c 100%);
+        background-size: 200% auto;
+      }
+      .paper-input {
+        border: none;
+        border-bottom: 2px solid rgba(193, 198, 214, 0.2);
+        background: transparent;
+        border-radius: 0;
+        transition: border-color 0.3s ease;
+      }
+      .paper-input:focus {
+        outline: none;
+        border-bottom-color: #0b55cf;
+        box-shadow: none;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface selection:bg-primary/10">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-2">
+<span class="text-xl font-extrabold tracking-tight text-blue-700 dark:text-blue-400 font-headline">CVFácil</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-slate-500 hover:opacity-80 transition-opacity p-2 rounded-full active:scale-95 duration-150" data-icon="auto_awesome">auto_awesome</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Professional user profile photo with clean lighting and neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9dU38RKEMD5O6OAntFFyYYVuApRM-XDiPuh6qXisO3dOT1pt8gMwWMcOLTyWEW6pPkfnbGjUy5DuzC5HATcv0Blw1syFiLRAW1AG4_NnCSLh9VW9NeJXM3iaAmSybrbMxnxDuULtyVSYCpp4_GdKDAv7tuQrVR8GAt33C9gQCRzkrawYv4sXucvvTRJ3VyOd4q8q2zi3f3pCV4vV2PAqjGKAOZu8lvw0t8NTIQsiVnF0Y_MST4P5fQ81eGrv744ozruU9eFlqmb8i"/>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-4xl mx-auto">
+<!-- Progress Bar Section -->
+<div class="mb-12">
+<div class="flex justify-between items-end mb-3">
+<h1 class="font-headline font-bold text-2xl tracking-tight text-on-surface">Tu Trayectoria Profesional</h1>
+<span class="text-primary font-semibold text-sm">65% completado</span>
+</div>
+<div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-primary-container w-[65%] rounded-full transition-all duration-700"></div>
+</div>
+</div>
+<div class="space-y-16">
+<!-- Work Experience Section -->
+<section class="relative">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="work">work</span>
+</div>
+<h2 class="font-headline font-bold text-xl">Experiencia Laboral</h2>
+</div>
+<div class="grid gap-12">
+<!-- Form Group -->
+<div class="group relative">
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="flex flex-col gap-2">
+<label class="text-title-md font-semibold text-on-surface-variant px-1">Cargo / Puesto</label>
+<input class="paper-input py-3 px-1 text-lg" placeholder="Ej: Senior Product Designer" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-title-md font-semibold text-on-surface-variant px-1">Empresa</label>
+<input class="paper-input py-3 px-1 text-lg" placeholder="Ej: Tech Solutions Inc." type="text"/>
+</div>
+<div class="md:col-span-2 flex flex-col gap-2 relative">
+<label class="text-title-md font-semibold text-on-surface-variant px-1">Descripción de Responsabilidades</label>
+<textarea class="paper-input py-3 px-1 text-lg resize-none" placeholder="Describe lo que hiciste..." rows="4"></textarea>
+<!-- AI Floating Tooltip -->
+<div class="absolute -right-4 md:-right-12 top-1/2 -translate-y-1/2 translate-x-full hidden md:block w-64 z-10">
+<div class="bg-secondary-container text-on-secondary-fixed-variant p-4 rounded-xl shadow-lg border border-primary/10 relative">
+<div class="flex items-start gap-3">
+<div class="mt-1">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<p class="text-sm font-medium leading-relaxed">
+<span class="font-bold block mb-1">Consejo de IA</span>
+                                                    Describe tus logros con datos numéricos para destacar más.
+                                                </p>
+</div>
+<!-- Tooltip Arrow -->
+<div class="absolute top-1/2 -left-2 -translate-y-1/2 w-4 h-4 bg-secondary-container rotate-45 border-l border-b border-primary/10"></div>
+</div>
+</div>
+<!-- Mobile AI Tip -->
+<div class="mt-4 md:hidden bg-secondary-container text-on-secondary-fixed-variant p-3 rounded-lg flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<p class="text-xs font-medium">IA: Describe tus logros con datos numéricos.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<button class="flex items-center justify-center gap-2 py-4 border-2 border-dashed border-outline-variant/30 rounded-xl text-primary font-semibold hover:bg-primary/5 transition-colors group">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="add_circle">add_circle</span>
+                        Añadir otra experiencia
+                    </button>
+</div>
+</section>
+<!-- Education Section -->
+<section>
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-xl bg-tertiary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" data-icon="school">school</span>
+</div>
+<h2 class="font-headline font-bold text-xl">Educación</h2>
+</div>
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="flex flex-col gap-2">
+<label class="text-title-md font-semibold text-on-surface-variant px-1">Título / Carrera</label>
+<input class="paper-input py-3 px-1 text-lg" placeholder="Ej: Licenciatura en Marketing" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-title-md font-semibold text-on-surface-variant px-1">Institución</label>
+<input class="paper-input py-3 px-1 text-lg" placeholder="Ej: Universidad Nacional" type="text"/>
+</div>
+</div>
+<!-- AI Suggestion Chip -->
+<div class="mt-8 flex flex-wrap gap-2">
+<span class="text-xs font-bold text-outline uppercase tracking-wider mb-2 w-full">Sugerencias inteligentes:</span>
+<button class="bg-secondary-fixed text-on-secondary-fixed-variant px-4 py-2 rounded-full text-sm font-medium hover:opacity-80 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="lightbulb">lightbulb</span>
+                            Incluir honores académicos
+                        </button>
+<button class="bg-secondary-fixed text-on-secondary-fixed-variant px-4 py-2 rounded-full text-sm font-medium hover:opacity-80 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="lightbulb">lightbulb</span>
+                            Añadir proyectos relevantes
+                        </button>
+</div>
+</div>
+</section>
+</div>
+<!-- Floating Action Section -->
+<div class="mt-16 flex justify-between items-center">
+<button class="px-8 py-3 text-primary font-bold hover:bg-primary/5 rounded-xl transition-colors">Guardar borrador</button>
+<button class="px-10 py-4 bg-gradient-to-br from-primary to-primary-container text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">Siguiente paso</button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0_-4px_12px_rgba(0,0,0,0.05)] rounded-t-2xl z-50">
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors rounded-xl">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-inter text-[11px] font-semibold">Inicio</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-100 rounded-xl px-3 py-1.5 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-inter text-[11px] font-semibold">Mis CVs</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors rounded-xl">
+<span class="material-symbols-outlined" data-icon="tactic">tactic</span>
+<span class="font-inter text-[11px] font-semibold">Plantillas</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors rounded-xl">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-inter text-[11px] font-semibold">Entrevista</span>
+</div>
+</nav>
+</body></html>

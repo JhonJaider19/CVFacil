@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#0b55cf",
+              "primary-container": "#3870ea",
+              "surface": "#f8f9fa",
+              "inverse-surface": "#2e3132",
+              "on-primary-container": "#ffffff",
+              "tertiary": "#1a6c23",
+              "tertiary-container": "#37863a",
+              "on-error-container": "#93000a",
+              "surface-container-highest": "#e1e3e4",
+              "secondary-fixed-dim": "#bac7de",
+              "on-surface": "#191c1d",
+              "secondary-container": "#d6e3fb",
+              "inverse-primary": "#b2c5ff",
+              "surface-container-high": "#e7e8e9",
+              "on-secondary": "#ffffff",
+              "on-tertiary-fixed-variant": "#005312",
+              "on-surface-variant": "#414754",
+              "error-container": "#ffdad6",
+              "surface-container": "#edeeef",
+              "surface-tint": "#0c56d0",
+              "surface-dim": "#d9dadb",
+              "secondary-fixed": "#d6e3fb",
+              "primary-fixed": "#dae2ff",
+              "on-primary-fixed": "#001848",
+              "on-background": "#191c1d",
+              "surface-container-low": "#f3f4f5",
+              "background": "#f8f9fa",
+              "tertiary-fixed": "#a3f69c",
+              "on-secondary-container": "#586579",
+              "on-tertiary-container": "#ffffff",
+              "on-tertiary": "#ffffff",
+              "error": "#ba1a1a",
+              "outline-variant": "#c1c6d6",
+              "on-error": "#ffffff",
+              "on-primary-fixed-variant": "#0040a2",
+              "on-primary": "#ffffff",
+              "tertiary-fixed-dim": "#88d982",
+              "primary-fixed-dim": "#b2c5ff",
+              "surface-bright": "#f8f9fa",
+              "on-secondary-fixed-variant": "#3b485a",
+              "on-tertiary-fixed": "#002204",
+              "surface-variant": "#e1e3e4",
+              "surface-container-lowest": "#ffffff",
+              "secondary": "#525f73",
+              "inverse-on-surface": "#f0f1f2",
+              "outline": "#727785",
+              "on-secondary-fixed": "#001d35"
+            },
+            fontFamily: {
+              "headline": ["Manrope", "sans-serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface antialiased pb-32">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none h-16 flex justify-between items-center px-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-blue-700 text-2xl" data-icon="description">description</span>
+<span class="text-xl font-extrabold tracking-tight text-blue-700">CVFácil</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center gap-6 mr-6">
+<a class="text-blue-700 font-semibold font-inter text-sm" href="#">Inicio</a>
+<a class="text-slate-500 font-semibold font-inter text-sm" href="#">Mis CVs</a>
+<a class="text-slate-500 font-semibold font-inter text-sm" href="#">Plantillas</a>
+<a class="text-slate-500 font-semibold font-inter text-sm" href="#">Entrevista</a>
+</div>
+<button class="material-symbols-outlined text-slate-500 hover:opacity-80 transition-opacity" data-icon="auto_awesome">auto_awesome</button>
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden border border-outline-variant/20">
+<img alt="User Profile" data-alt="professional headshot of a smiling person in business casual attire with a soft blurred office background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVvOV324KyCq7_SMr8zV44Y_-54heoqO6UM62hMG4QSDVFhnSKwT_Xr0eK9LzAXoebhMf8Wpp4qaGxCK2pYStnQZERKAFNaLCGFj29Km3MxbbIM1NDwl-8Q-kXnr2JMndQmIK7EisNusIpL0JknJXXQvBItB0o9Jo6NSBXF5UPvwySDSiYpg9V3wQTj0NK6DwdMFk6a02ybIO6D58EpAWYA0DnN7YjmuY1DZ6lwNg0-BZqyzU_uQiIlytwV1VJyIY1prxue63yIMLo"/>
+</div>
+</div>
+</header>
+<main class="pt-24 px-4 md:px-8 max-w-5xl mx-auto space-y-12">
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+<!-- Left Side: CV Preview (The Architect's Canvas) -->
+<div class="lg:col-span-7 flex flex-col items-center">
+<div class="w-full flex justify-between items-end mb-6">
+<div>
+<h1 class="font-headline font-extrabold text-2xl tracking-tight text-on-surface">Vista Previa</h1>
+<p class="text-on-surface-variant body-md opacity-70">Última edición hace 5 minutos</p>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="zoom_in">zoom_in</span>
+</button>
+</div>
+</div>
+<!-- CV Paper Visual -->
+<div class="relative w-full aspect-[1/1.41] bg-white shadow-2xl shadow-blue-900/5 rounded-sm overflow-hidden p-12 flex flex-col gap-8 ring-1 ring-black/[0.02]">
+<!-- CV Header Area -->
+<div class="border-b-2 border-primary/10 pb-6 flex justify-between items-start">
+<div>
+<h2 class="font-headline font-extrabold text-3xl text-on-surface tracking-tighter">ALEXIS RIVERA</h2>
+<p class="font-inter font-medium text-primary text-lg">Product Designer &amp; Strategist</p>
+</div>
+<div class="text-right text-xs text-on-surface-variant space-y-1">
+<p>alexis.design@email.com</p>
+<p>+34 600 000 000</p>
+<p>Madrid, España</p>
+</div>
+</div>
+<!-- CV Content Skeleton -->
+<div class="space-y-8">
+<section class="space-y-3">
+<h3 class="text-[10px] font-bold tracking-widest text-primary uppercase">Perfil Profesional</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed">Diseñador con más de 8 años de experiencia creando soluciones digitales centradas en el usuario. Especializado en sistemas de diseño escalables y flujos complejos para productos SaaS de alta productividad.</p>
+</section>
+<section class="space-y-4">
+<h3 class="text-[10px] font-bold tracking-widest text-primary uppercase">Experiencia Laboral</h3>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between items-baseline">
+<h4 class="font-headline font-bold text-sm">Senior UI/UX Designer</h4>
+<span class="text-[10px] text-on-surface-variant italic">2021 — Presente</span>
+</div>
+<p class="text-xs font-medium text-on-surface-variant mb-1">TechFlow Systems</p>
+<ul class="text-[11px] text-on-surface-variant list-disc pl-4 space-y-1">
+<li>Liderazgo de la migración del ecosistema legacy a un sistema de diseño moderno.</li>
+<li>Reducción del 30% en el tiempo de desarrollo mediante componentes reutilizables.</li>
+</ul>
+</div>
+</div>
+</section>
+<section class="space-y-4">
+<h3 class="text-[10px] font-bold tracking-widest text-primary uppercase">Educación</h3>
+<div class="flex justify-between items-baseline">
+<h4 class="font-headline font-bold text-sm">Grado en Diseño Digital</h4>
+<span class="text-[10px] text-on-surface-variant italic">2014 — 2018</span>
+</div>
+<p class="text-xs text-on-surface-variant">Universidad de Artes Visuales, Madrid</p>
+</section>
+</div>
+<!-- Subtle AI Whisper -->
+<div class="absolute bottom-12 right-12 flex items-center gap-2 bg-tertiary-fixed px-3 py-1.5 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-on-tertiary-fixed text-sm" data-icon="auto_fix_high" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
+<span class="text-[10px] font-bold text-on-tertiary-fixed">CV Optimizado al 95%</span>
+</div>
+</div>
+</div>
+<!-- Right Side: Actions & Sidebar -->
+<div class="lg:col-span-5 space-y-8">
+<!-- CTA Section -->
+<div class="bg-surface-container-low p-8 rounded-3xl space-y-6">
+<div class="space-y-2">
+<h2 class="font-headline font-bold text-xl">¿Todo listo?</h2>
+<p class="text-on-surface-variant text-sm leading-relaxed">Tu CV está optimizado para sistemas ATS. Puedes descargarlo en PDF de alta calidad listo para imprimir.</p>
+</div>
+<button class="w-full h-14 bg-gradient-to-br from-primary to-primary-container text-on-primary-container font-headline font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+                        Descargar PDF
+                    </button>
+<div class="flex items-center gap-4 pt-4 border-t border-outline-variant/15">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-secondary-container border-2 border-surface flex items-center justify-center text-[10px] font-bold">JD</div>
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed border-2 border-surface flex items-center justify-center text-[10px] font-bold">MS</div>
+<div class="w-8 h-8 rounded-full bg-primary-fixed border-2 border-surface flex items-center justify-center text-[10px] font-bold">AL</div>
+</div>
+<p class="text-[11px] text-on-surface-variant font-medium">Revisado por expertos en reclutamiento</p>
+</div>
+</div>
+<!-- AI Insights Bento -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-white p-5 rounded-2xl border border-outline-variant/10">
+<span class="material-symbols-outlined text-primary mb-3 block" data-icon="analytics">analytics</span>
+<p class="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">Impacto</p>
+<p class="text-sm font-semibold text-on-surface leading-tight">Palabras clave detectadas</p>
+</div>
+<div class="bg-white p-5 rounded-2xl border border-outline-variant/10">
+<span class="material-symbols-outlined text-tertiary mb-3 block" data-icon="verified">verified</span>
+<p class="text-[10px] font-bold text-tertiary uppercase tracking-wider mb-1">Legibilidad</p>
+<p class="text-sm font-semibold text-on-surface leading-tight">Excelente puntuación</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Template Selection Section -->
+<section class="space-y-6">
+<div class="flex justify-between items-center">
+<h2 class="font-headline font-extrabold text-2xl tracking-tight">Seleccionar Plantilla</h2>
+<button class="text-primary font-bold text-sm hover:underline">Ver todas</button>
+</div>
+<!-- Horizontal Carousel -->
+<div class="flex gap-6 overflow-x-auto pb-8 hide-scrollbar snap-x">
+<!-- Moderno -->
+<div class="flex-none w-64 snap-start group cursor-pointer">
+<div class="aspect-[1/1.41] bg-surface-container-high rounded-xl mb-4 overflow-hidden relative border-2 border-primary ring-4 ring-primary/10 transition-all">
+<div class="absolute inset-0 bg-white/40 flex items-center justify-center">
+<span class="bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Activo</span>
+</div>
+<img alt="Plantilla Moderna" class="w-full h-full object-cover grayscale-[0.5]" data-alt="clean minimalist resume template with professional layout, bold typography, and subtle blue accent colors on white textured paper" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhOUoq3nSSVjyS1ftSFwIoJX5w75CLf-LWvwiqQFaPAzMwUT-Gdb5KQNM__xD-VkCqlz8Gvyx_GHI7636tvwiCZpbXiXerhIbYQIKH2F_ub7_YDMwEXwVr5vQAcou6EDvvLckDJCGLW0b2pYLtXPktNEG7GAgwqvVDh6ESIgDnP4MEpXe7pe6UNgtyhnj1BcKOYszOrE4Wtbw78xY_uUao5NZkC4YbTQ8TSP0u1Pkug6O51N40JOH4SA1pdsky7pinRoBUrmH1e9DA"/>
+</div>
+<h3 class="font-headline font-bold text-on-surface">Moderno</h3>
+<p class="text-xs text-on-surface-variant">Ideal para perfiles tech y diseño</p>
+</div>
+<!-- Clásico -->
+<div class="flex-none w-64 snap-start group cursor-pointer">
+<div class="aspect-[1/1.41] bg-surface-container-high rounded-xl mb-4 overflow-hidden relative border border-outline-variant/20 group-hover:border-primary/50 transition-all">
+<img alt="Plantilla Clásica" class="w-full h-full object-cover" data-alt="traditional professional resume template with serif fonts, centered headers, and formal structured layout for corporate roles" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdt7RoE84RQKHLexY0_B3Pw-wW--mMAr0r5skTDrIplSRarX4ZVWYpNTNzqs7DukF6avrWqheioSaxIMGWctyQpPXD2P7aU_1iE5PXW1XwmCcQbhJI28Y3yP5fVmKF1kTord3ctLsicHfIWoz5L_HQlCc5kYLIIFwExzoqZKYieaXOv16wVyukWoyhKSVl2mv5-LL6vhSnDW4ypBcjWLlUU4nFh6o-ZYDKJx3C44ZlzPPNY3xVO5zd0g-stGP9gaJzhsxK3K0zsKkP"/>
+</div>
+<h3 class="font-headline font-bold text-on-surface">Clásico</h3>
+<p class="text-xs text-on-surface-variant">Para sectores corporativos y banca</p>
+</div>
+<!-- Creativo -->
+<div class="flex-none w-64 snap-start group cursor-pointer">
+<div class="aspect-[1/1.41] bg-surface-container-high rounded-xl mb-4 overflow-hidden relative border border-outline-variant/20 group-hover:border-primary/50 transition-all">
+<img alt="Plantilla Creativa" class="w-full h-full object-cover" data-alt="asymmetric creative resume layout with soft pastel background colors, playful geometric shapes, and modern sans-serif fonts" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIJuAF7iB__8ZwNCzlVm52fkD1najs8CZTB-pyDSp_yugkTq-E9qQSmg2UB7cYdEVgKMjtqFei55Anm6H2hA6tBu5Vt5IZLY5Il4uHwFB2cMNSqvoD42xajxdNYq-7d_xeZxWudwG3A6CeKWaz6Q0iBjabv-GLxyWyj8_831ITLfk7ir4LvxC10DPveCt4x4o86h5eG-pDoQUI1hv7GfJ0BIdntfWWx-gXyp63s_XxGe8K8NvEBkPAoGLtynepuD14r6X5R1qQrKGS"/>
+</div>
+<h3 class="font-headline font-bold text-on-surface">Creativo</h3>
+<p class="text-xs text-on-surface-variant">Perfecto para artes y publicidad</p>
+</div>
+<!-- Minimalista -->
+<div class="flex-none w-64 snap-start group cursor-pointer">
+<div class="aspect-[1/1.41] bg-surface-container-high rounded-xl mb-4 overflow-hidden relative border border-outline-variant/20 group-hover:border-primary/50 transition-all">
+<img alt="Plantilla Minimalista" class="w-full h-full object-cover" data-alt="ultra minimalist resume template with plenty of white space, thin lines, and elegant small typography for a sophisticated look" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtxmbZgX34vwE7eKTRREEz7IkpYnvLfTMVdpskhcRNNvIVCbJWqnKhlFp641xFhXKJP2n6S5F5mN8-f2J3GUPerfeLaQpndoY3Y9hMrU6gsfdPvKoEdmtUF6_A7wjnMGMvylYN5y_LDU8soN34BYs3MZPT_RXld2COBSmC2oV6yB6Z84oTA6G65a8varhA8tzowkZR7FLpX7BXGZ-CvwqqpEbiz_ladUJo-lySAMKz8RQJx2LKCJY5gMPgBydjvhQhVQEhMKxYfqPH"/>
+</div>
+<h3 class="font-headline font-bold text-on-surface">Minimalista</h3>
+<p class="text-xs text-on-surface-variant">Menos es más. Enfoque puro.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar (Mobile only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0_-4px_12px_rgba(0,0,0,0.05)] rounded-t-2xl z-50">
+<a class="flex flex-col items-center justify-center text-slate-500 px-3 py-1.5 hover:bg-slate-100 transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-inter text-[11px] font-semibold mt-1">Inicio</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 px-3 py-1.5 hover:bg-slate-100 transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-inter text-[11px] font-semibold mt-1">Mis CVs</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-blue-100 text-blue-800 rounded-xl px-3 py-1.5 transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="tactic">tactic</span>
+<span class="font-inter text-[11px] font-semibold mt-1">Plantillas</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 px-3 py-1.5 hover:bg-slate-100 transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-inter text-[11px] font-semibold mt-1">Entrevista</span>
+</a>
+</nav>
+<!-- Floating AI Bubble (Decorative only as per FAB rule) -->
+<div class="fixed bottom-24 right-6 md:bottom-8 md:right-8 z-40">
+<button class="w-14 h-14 rounded-2xl bg-white shadow-xl flex items-center justify-center border border-outline-variant/10 group overflow-hidden relative">
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/5 to-tertiary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<span class="material-symbols-outlined text-primary" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</button>
+</div>
+</body></html>

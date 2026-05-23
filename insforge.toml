@@ -1,0 +1,17 @@
+[auth]
+allowed_redirect_urls = [
+  "cvfacil://oauth-callback",
+  "http://localhost:8081",
+  "http://localhost:19006",
+  "https://j67tvrnn.us-east.insforge.app",
+]
+require_email_verification = true
+verify_email_method = "code"
+reset_password_method = "code"
+
+[auth.password]
+min_length = 6
+require_number = false
+require_lowercase = false
+require_uppercase = false
+require_special_char = false

@@ -1,0 +1,475 @@
+import GlassHeader from "@/components/GlassHeader";
+import { MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useState, useRef } from "react";
+import { Image, Pressable, ScrollView, Text, TextInput, View, ActivityIndicator } from "react-native";
+import { useAuth } from "@/src/lib/auth-context";
+import { useQuery } from "@tanstack/react-query";
+import { getResumes, createResume, updateResume } from "@/src/lib/api";
+import { chatCompletion, generateInterviewQuestion, generateCvSuggestion, generateCvScore } from "@/src/lib/ai-service";
+
+const quickActions = [
+  {
+    id: "interview",
+    icon: "track-changes" as const,
+    title: "Simular Entrevista",
+    desc: "Practica con IA en tiempo real",
+    gradient: ["#0b55cf", "#3870ea"] as const,
+  },
+  {
+    id: "improve",
+    icon: "auto-awesome" as const,
+    title: "Mejorar CV",
+    desc: "Optimiza secciones con IA",
+    gradient: ["#1a6c23", "#37863a"] as const,
+  },
+  {
+    id: "tips",
+    icon: "lightbulb" as const,
+    title: "Consejos",
+    desc: "Tips para destacar",
+    gradient: ["#525f73", "#bac7de"] as const,
+  },
+];
+
+interface ChatMessage {
+  id: string;
+  type: "ai" | "user";
+  text: string;
+  time: string;
+}
+
+export default function AssistantScreen() {
+  const { user } = useAuth();
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: "1",
+      type: "ai",
+      text: "¡Hola! Soy tu asistente profesional con IA. Puedo ayudarte a practicar entrevistas, mejorar tu CV o darte consejos para destacar. ¿Por dónde quieres empezar?",
+      time: "Ahora",
+    },
+  ]);
+  const [showInterview, setShowInterview] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+
+  const { data: resumes } = useQuery({
+    queryKey: ["resumes", user?.id],
+    queryFn: () => getResumes(user!.id),
+    enabled: !!user,
+  });
+
+  const currentResume = resumes?.[0];
+
+  async function handleSend(content?: string) {
+    const text = (content || input).trim();
+    if (!text || aiLoading) return;
+    setInput("");
+
+    const userMsg: ChatMessage = { id: Date.now().toString(), type: "user", text, time: "Enviado" };
+    setMessages(prev => [...prev, userMsg]);
+    setAiLoading(true);
+
+    try {
+      const response = await chatCompletion([
+        { role: "system", content: "Eres un asistente profesional experto en CVs, entrevistas de trabajo y desarrollo de carrera. Respondes en español de forma clara y útil." },
+        ...messages.map(m => ({ role: m.type === "ai" ? "assistant" as const : "user" as const, content: m.text })),
+        { role: "user" as const, content: text },
+      ]);
+      const reply = response?.choices?.[0]?.message?.content || "Lo siento, no pude procesar tu solicitud.";
+      const aiMsg: ChatMessage = { id: (Date.now() + 1).toString(), type: "ai", text: reply, time: "Ahora" };
+      setMessages(prev => [...prev, aiMsg]);
+    } catch (e: any) {
+      const errMsg: ChatMessage = { id: (Date.now() + 1).toString(), type: "ai", text: `Error: ${e.message}`, time: "Ahora" };
+      setMessages(prev => [...prev, errMsg]);
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  async function handleQuickAction(actionId: string) {
+    switch (actionId) {
+      case "interview":
+        setShowInterview(true);
+        break;
+      case "improve":
+        if (!currentResume) {
+          setMessages(prev => [...prev, { id: Date.now().toString(), type: "ai", text: "Primero necesitas crear un CV en el Editor para que pueda analizarlo y sugerir mejoras.", time: "Ahora" }]);
+          return;
+        }
+        setAiLoading(true);
+        try {
+          const suggestion = await generateCvSuggestion(currentResume.data);
+          const reply = suggestion?.choices?.[0]?.message?.content || "No pude analizar tu CV.";
+          setMessages(prev => [...prev, { id: Date.now().toString(), type: "ai", text: reply, time: "Ahora" }]);
+        } catch (e: any) {
+          setMessages(prev => [...prev, { id: Date.now().toString(), type: "ai", text: `Error: ${e.message}`, time: "Ahora" }]);
+        } finally {
+          setAiLoading(false);
+        }
+        break;
+      case "tips":
+        setAiLoading(true);
+        try {
+          const tips = await chatCompletion([
+            { role: "system", content: "Eres un coach profesional. Da 3 consejos prácticos y específicos para que un candidato destaque en su búsqueda de trabajo. Responde en español." },
+            { role: "user", content: "Dame consejos para mejorar mi perfil profesional y encontrar mejores oportunidades laborales." },
+          ]);
+          const reply = tips?.choices?.[0]?.message?.content || "No pude obtener consejos.";
+          setMessages(prev => [...prev, { id: Date.now().toString(), type: "ai", text: reply, time: "Ahora" }]);
+        } catch (e: any) {
+          setMessages(prev => [...prev, { id: Date.now().toString(), type: "ai", text: `Error: ${e.message}`, time: "Ahora" }]);
+        } finally {
+          setAiLoading(false);
+        }
+        break;
+    }
+  }
+
+  if (showInterview) {
+    return (
+      <InterviewMode
+        onBack={() => setShowInterview(false)}
+        resumeData={currentResume?.data}
+        resumeId={currentResume?.id}
+      />
+    );
+  }
+
+  return (
+    <View className="flex-1 bg-surface">
+      <GlassHeader>
+        <View className="flex-row items-center gap-4">
+          <Pressable className="p-1 hover:bg-surface-container-low rounded-lg">
+            <MaterialIcons name="notifications-none" size={24} color="#525f73" />
+          </Pressable>
+        </View>
+      </GlassHeader>
+
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingTop: 96, paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="px-6">
+          <Text className="font-headline text-3xl text-on-surface tracking-tight mb-2">Asistente IA</Text>
+          <Text className="text-on-surface-variant font-body text-lg mb-8">Tu coach profesional con inteligencia artificial</Text>
+
+          <View className="gap-4 mb-10">
+            {quickActions.map((action) => (
+              <Pressable key={action.id} onPress={() => handleQuickAction(action.id)}>
+                <LinearGradient
+                  colors={action.gradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  className="p-6 rounded-xl flex-row items-center gap-4"
+                >
+                  <View className="w-12 h-12 rounded-xl bg-white/20 items-center justify-center">
+                    <MaterialIcons name={action.icon} size={24} color="#ffffff" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-white font-headline text-lg">{action.title}</Text>
+                    <Text className="text-white/80 font-body text-sm">{action.desc}</Text>
+                  </View>
+                  <MaterialIcons name="arrow-forward" size={20} color="rgba(255,255,255,0.6)" />
+                </LinearGradient>
+              </Pressable>
+            ))}
+          </View>
+
+          <View className="mb-6">
+            <View className="flex-row items-center gap-3 mb-6">
+              <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center">
+                <MaterialIcons name="chat" size={20} color="#0b55cf" />
+              </View>
+              <Text className="font-headline text-xl text-on-surface">Conversación</Text>
+            </View>
+
+            {messages.map((msg) => (
+              <View key={msg.id} className="flex-row gap-3 mb-6">
+                <View className={`w-10 h-10 rounded-full items-center justify-center ${msg.type === "ai" ? "bg-primary-container" : "bg-secondary-container"}`}>
+                  {msg.type === "ai" ? (
+                    <MaterialIcons name="smart-toy" size={20} color="#ffffff" />
+                  ) : (
+                    <MaterialIcons name="person" size={20} color="#ffffff" />
+                  )}
+                </View>
+                <View className="flex-1">
+                  <View className={`p-4 rounded-2xl ${msg.type === "ai" ? "bg-white rounded-tl-none" : "bg-primary/5 rounded-tr-none"}`}>
+                    <Text className="text-on-surface font-body leading-relaxed">{msg.text}</Text>
+                  </View>
+                  <Text className="text-[11px] text-outline font-body-medium px-1 mt-1">
+                    {msg.type === "ai" ? "Asistente IA" : "Tú"} • {msg.time}
+                  </Text>
+                </View>
+              </View>
+            ))}
+
+            {aiLoading && (
+              <View className="flex-row items-center gap-3 mb-6">
+                <View className="w-10 h-10 rounded-full bg-primary-container items-center justify-center">
+                  <MaterialIcons name="smart-toy" size={20} color="#ffffff" />
+                </View>
+                <View className="bg-white p-4 rounded-2xl rounded-tl-none">
+                  <ActivityIndicator size="small" color="#0b55cf" />
+                </View>
+              </View>
+            )}
+          </View>
+
+          <View className="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/10">
+            <TextInput
+              className="text-on-surface font-body text-base min-h-[56px] border-b-2 pb-3"
+              placeholder="Escribe tu mensaje aquí..."
+              placeholderTextColor="#727785"
+              value={input}
+              onChangeText={setInput}
+              multiline
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
+              style={{ borderColor: isInputFocused ? "#0b55cf" : "rgba(193, 198, 214, 0.2)" }}
+              onSubmitEditing={() => handleSend()}
+            />
+            <View className="flex-row items-center justify-between mt-3">
+              <View className="flex-row gap-2">
+                <Pressable className="bg-secondary-container px-3 py-1.5 rounded-xl" onPress={() => handleQuickAction("improve")}>
+                  <Text className="text-[11px] font-body-bold text-secondary">Mejorar CV</Text>
+                </Pressable>
+                <Pressable className="bg-secondary-container px-3 py-1.5 rounded-xl" onPress={() => handleQuickAction("tips")}>
+                  <Text className="text-[11px] font-body-bold text-secondary">Preparar entrevista</Text>
+                </Pressable>
+              </View>
+              <Pressable onPress={() => handleSend()}>
+                <LinearGradient
+                  colors={["#0b55cf", "#3870ea"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  className="w-12 h-12 rounded-xl items-center justify-center shadow-md shadow-primary/20 active:scale-95 transition-all"
+                >
+                  <MaterialIcons name="send" size={18} color="#ffffff" />
+                </LinearGradient>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+function InterviewMode({
+  onBack,
+  resumeData,
+  resumeId,
+}: {
+  onBack: () => void;
+  resumeData: any;
+  resumeId?: string;
+}) {
+  const [input, setInput] = useState("");
+  const [isInterviewInputFocused, setIsInterviewInputFocused] = useState(false);
+  const [interviewMessages, setInterviewMessages] = useState<ChatMessage[]>([
+    {
+      id: "init",
+      type: "ai",
+      text: "Bienvenido a la simulación de entrevista. Voy a hacerte preguntas como un reclutador real. Responde con naturalidad. Cuéntame, ¿por qué decidiste postularte a esta posición?",
+      time: "Ahora",
+    },
+  ]);
+  const [loading, setLoading] = useState(false);
+  const [score, setScore] = useState(0);
+  const [timer, setTimer] = useState(0);
+  const timerRef = useRef<any>(null);
+
+  function startTimer() {
+    timerRef.current = setInterval(() => setTimer(t => t + 1), 1000);
+  }
+
+  function formatTime(seconds: number) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  }
+
+  async function handleSendInterview() {
+    const text = input.trim();
+    if (!text || loading) return;
+    setInput("");
+
+    const userMsg: ChatMessage = { id: Date.now().toString(), type: "user", text, time: "Enviado" };
+    setInterviewMessages(prev => [...prev, userMsg]);
+    setLoading(true);
+
+    if (!timerRef.current) startTimer();
+
+    try {
+      const response = await generateInterviewQuestion(text);
+      const reply = response?.choices?.[0]?.message?.content || "Gracias por tu respuesta. Cuéntame más sobre tu experiencia.";
+
+      const followUpScore = text.length > 50 ? Math.min(score + 5, 100) : Math.min(score + 2, 100);
+      setScore(followUpScore);
+
+      const aiMsg: ChatMessage = { id: (Date.now() + 1).toString(), type: "ai", text: reply, time: "Ahora" };
+      setInterviewMessages(prev => [...prev, aiMsg]);
+    } catch (e: any) {
+      const errMsg: ChatMessage = { id: (Date.now() + 1).toString(), type: "ai", text: `Error: ${e.message}`, time: "Ahora" };
+      setInterviewMessages(prev => [...prev, errMsg]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleFinish() {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setLoading(true);
+
+    try {
+      const formattedTimer = formatTime(timer);
+      const summaryPrompt = `La entrevista duró ${formattedTimer} y se hicieron ${interviewMessages.length - 1} preguntas. Genera un feedback profesional detallado con: fortalezas mostradas, áreas de mejora, puntuación final y recomendaciones. Responde en español.`;
+
+      const response = await chatCompletion([
+        { role: "system", content: "Eres un reclutador senior dando feedback post-entrevista. Sé constructivo, específico y profesional." },
+        { role: "user", content: summaryPrompt },
+      ]);
+      const feedback = response?.choices?.[0]?.message?.content || "Gracias por participar en la simulación.";
+      setInterviewMessages(prev => [...prev, { id: Date.now().toString(), type: "ai", text: `## Feedback Final\n\n${feedback}`, time: "Ahora" }]);
+    } catch (e: any) {
+      setInterviewMessages(prev => [...prev, { id: Date.now().toString(), type: "ai", text: `Error generando feedback: ${e.message}`, time: "Ahora" }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <View className="flex-1 bg-surface">
+      <View className="absolute top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl">
+        <View className="flex-row items-center justify-between px-6 h-16 border-b border-outline-variant/10">
+          <View className="flex-row items-center gap-3">
+            <Pressable onPress={onBack} className="p-1 hover:bg-surface-container-low rounded-lg">
+              <MaterialIcons name="arrow-back" size={24} color="#525f73" />
+            </Pressable>
+            <Text className="text-xl font-display tracking-tight text-primary">CVFácil</Text>
+          </View>
+          <View className="flex-row items-center gap-2 bg-secondary-container/50 px-3 py-1 rounded-full border border-outline-variant/10">
+            <MaterialIcons name="track-changes" size={16} color="#0b55cf" />
+            <Text className="text-xs font-headline text-primary uppercase tracking-wider">Simulador IA</Text>
+          </View>
+        </View>
+      </View>
+
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingTop: 96, paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="px-6">
+          <View className="flex-row justify-between mb-8">
+            <View className="flex-1 bg-surface-container-lowest p-4 rounded-xl mr-2 border border-outline-variant/10">
+              <View className="flex-row items-center gap-2 mb-1">
+                <MaterialIcons name="trending-up" size={16} color="#525f73" />
+                <Text className="text-[10px] font-body-bold text-on-surface-variant uppercase tracking-wider">Calificación</Text>
+              </View>
+              <Text className="font-headline text-2xl text-on-surface">{Math.round(score)}<Text className="text-on-surface-variant font-body text-xs">/100</Text></Text>
+            </View>
+            <View className="flex-1 bg-surface-container-lowest p-4 rounded-xl mr-2 border border-outline-variant/10">
+              <View className="flex-row items-center gap-2 mb-1">
+                <MaterialIcons name="timer" size={16} color="#525f73" />
+                <Text className="text-[10px] font-body-bold text-on-surface-variant uppercase tracking-wider">Tiempo</Text>
+              </View>
+              <Text className="font-headline text-2xl text-on-surface">{formatTime(timer)}</Text>
+            </View>
+            <View className="flex-1 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10">
+              <View className="flex-row items-center gap-2 mb-1">
+                <MaterialIcons name="check-circle-outline" size={16} color="#525f73" />
+                <Text className="text-[10px] font-body-bold text-on-surface-variant uppercase tracking-wider">Preguntas</Text>
+              </View>
+              <Text className="font-headline text-2xl text-primary">{Math.max(0, interviewMessages.length - 1)}</Text>
+            </View>
+          </View>
+
+          <View className="mb-6">
+            {interviewMessages.map((msg) => (
+              <View key={msg.id} className="flex-row gap-3 mb-6">
+                <View className={`w-10 h-10 rounded-full items-center justify-center ${msg.type === "ai" ? "bg-primary-container" : "bg-secondary-container"}`}>
+                  {msg.type === "ai" ? <MaterialIcons name="smart-toy" size={20} color="#ffffff" /> : <MaterialIcons name="person" size={20} color="#ffffff" />}
+                </View>
+                <View className="flex-1">
+                  <View className={`p-4 rounded-2xl ${msg.type === "ai" ? "bg-white rounded-tl-none" : "bg-primary/5 rounded-tr-none"}`}>
+                    <Text className="text-on-surface font-body leading-relaxed">{msg.text}</Text>
+                  </View>
+                  <Text className="text-[11px] text-outline font-body-medium px-1 mt-1">
+                    {msg.type === "ai" ? "Reclutador IA" : "Tú"} • {msg.time}
+                  </Text>
+                </View>
+              </View>
+            ))}
+
+            {loading && (
+              <View className="flex-row gap-3 mb-6 opacity-70">
+                <View className="w-10 h-10 rounded-full bg-primary-container items-center justify-center">
+                  <MaterialIcons name="smart-toy" size={20} color="#ffffff" />
+                </View>
+                <View className="flex-1">
+                  <View className="bg-white p-4 rounded-2xl rounded-tl-none">
+                    <Text className="text-on-surface font-body italic">
+                      <ActivityIndicator size="small" color="#0b55cf" /> Analizando tu respuesta...
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+          </View>
+
+          <View className="flex-row items-center gap-3 mb-4">
+            <View className="flex-1">
+              <TextInput
+                className="bg-surface-container-lowest text-on-surface font-body text-base rounded-xl px-4 py-4 border"
+                placeholder="Escribe tu respuesta..."
+                placeholderTextColor="#727785"
+                value={input}
+                onChangeText={setInput}
+                multiline
+                onFocus={() => setIsInterviewInputFocused(true)}
+                onBlur={() => setIsInterviewInputFocused(false)}
+                style={{ borderColor: isInterviewInputFocused ? "#0b55cf" : "rgba(193, 198, 214, 0.2)" }}
+                onSubmitEditing={handleSendInterview}
+              />
+            </View>
+            <Pressable onPress={handleSendInterview}>
+              <LinearGradient
+                colors={["#0b55cf", "#3870ea"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                className="w-14 h-14 rounded-xl items-center justify-center shadow-md shadow-primary/20 active:scale-95 transition-all"
+              >
+                <MaterialIcons name="arrow-upward" size={24} color="#ffffff" />
+              </LinearGradient>
+            </Pressable>
+          </View>
+
+          <Pressable className="flex-row items-center justify-center gap-2 py-3 mb-8 hover:bg-surface-container-low rounded-lg transition-colors">
+            <MaterialIcons name="lightbulb" size={18} color="#0b55cf" />
+            <Text className="text-primary font-body-bold text-sm">Ayuda de IA</Text>
+          </Pressable>
+
+          <View className="flex-row justify-center">
+            <Pressable onPress={handleFinish}>
+              <LinearGradient
+                colors={["#ba1a1a", "#e03b3b"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                className="px-6 py-3 rounded-xl shadow-md shadow-error/20 active:scale-95 transition-all flex-row items-center gap-2"
+              >
+                <MaterialIcons name="assessment" size={18} color="#ffffff" />
+                <Text className="text-white font-headline-semibold text-sm">
+                  Finalizar y ver Feedback
+                </Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}

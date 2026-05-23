@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0b55cf",
+                        "primary-container": "#3870ea",
+                        "surface": "#f8f9fa",
+                        "inverse-surface": "#2e3132",
+                        "on-primary-container": "#ffffff",
+                        "tertiary": "#1a6c23",
+                        "tertiary-container": "#37863a",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e1e3e4",
+                        "secondary-fixed-dim": "#bac7de",
+                        "on-surface": "#191c1d",
+                        "secondary-container": "#d6e3fb",
+                        "inverse-primary": "#b2c5ff",
+                        "surface-container-high": "#e7e8e9",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#005312",
+                        "on-surface-variant": "#414754",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#edeeef",
+                        "surface-tint": "#0c56d0",
+                        "surface-dim": "#d9dadb",
+                        "secondary-fixed": "#d6e3fb",
+                        "primary-fixed": "#dae2ff",
+                        "on-primary-fixed": "#001848",
+                        "on-background": "#191c1d",
+                        "surface-container-low": "#f3f4f5",
+                        "background": "#f8f9fa",
+                        "tertiary-fixed": "#a3f69c",
+                        "on-secondary-container": "#586579",
+                        "on-tertiary-container": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#c1c6d6",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#0040a2",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#88d982",
+                        "primary-fixed-dim": "#b2c5ff",
+                        "surface-bright": "#f8f9fa",
+                        "on-secondary-fixed-variant": "#3b485a",
+                        "on-tertiary-fixed": "#002204",
+                        "surface-variant": "#e1e3e4",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#525f73",
+                        "inverse-on-surface": "#f0f1f2",
+                        "outline": "#727785",
+                        "on-secondary-fixed": "#0f1c2d"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-glass {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .shadow-ambient {
+            box-shadow: 0px 0px 32px 0px rgba(25, 28, 29, 0.06);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-2">
+<span class="text-xl font-extrabold tracking-tight text-blue-700 dark:text-blue-400 font-headline">CVFácil</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-slate-500 hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden border border-outline-variant/15">
+<img alt="User profile photo" class="w-full h-full object-cover" data-alt="Close-up portrait of a professional man in a light blue shirt with a friendly expression and blurred office background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3Y3tRkRNCwVwMmNhOyE9PAuR1o-oxCc-xc3R-KJRKV3BLSJlIBixdemkELH4NMRklrMK84Iu-VUSes9WvWepGJvGpWAJEQXPI4HW6O1dHdy4ru7xyogIm-rXTX3X6O0y_H7ejSMY8xORKiz7LqJlbBpA2t8RDTbgk7zccugzth-9VIORjb8jaCWOCZWlMIAACLvGjKMYCQPEIpo96GxhIRI3PgytI_priUrzQ9rBW7Ze3GamOtLbGAj8BPBlHvc6WotyjhtW5oQDF"/>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-7xl mx-auto">
+<!-- Welcome Section -->
+<section class="mb-10">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<h1 class="font-headline font-bold text-3xl md:text-4xl text-on-surface tracking-tight mb-2">¡Hola, Alejandro! 👋</h1>
+<p class="text-on-surface-variant text-lg max-w-2xl leading-relaxed">Tu perfil profesional está al 85%. Una pequeña mejora en tu experiencia laboral podría aumentar tus matches hoy.</p>
+</div>
+<button class="h-[56px] px-8 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl font-headline font-bold flex items-center justify-center gap-3 shadow-ambient hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                    Crear nuevo CV
+                </button>
+</div>
+</section>
+<!-- Stats & Insights Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+<!-- Stat Card 1 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-ambient border border-outline-variant/10 flex flex-col justify-between min-h-[160px]">
+<div class="flex items-start justify-between">
+<span class="text-on-surface-variant font-medium text-sm">Última simulación</span>
+<span class="p-2 bg-tertiary-fixed text-on-tertiary-fixed rounded-lg">
+<span class="material-symbols-outlined text-[20px]" data-icon="psychology">psychology</span>
+</span>
+</div>
+<div>
+<div class="flex items-baseline gap-1">
+<span class="text-4xl font-headline font-extrabold">8</span>
+<span class="text-on-surface-variant text-lg">/10</span>
+</div>
+<p class="text-tertiary text-xs font-semibold mt-1">¡Excelente preparación!</p>
+</div>
+</div>
+<!-- Stat Card 2 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-ambient border border-outline-variant/10 flex flex-col justify-between min-h-[160px]">
+<div class="flex items-start justify-between">
+<span class="text-on-surface-variant font-medium text-sm">Visualizaciones</span>
+<span class="p-2 bg-secondary-fixed text-on-secondary-fixed rounded-lg">
+<span class="material-symbols-outlined text-[20px]" data-icon="visibility">visibility</span>
+</span>
+</div>
+<div>
+<span class="text-4xl font-headline font-extrabold">124</span>
+<p class="text-on-surface-variant text-xs mt-1">+12% respecto a la semana pasada</p>
+</div>
+</div>
+<!-- AI Insight Card -->
+<div class="md:col-span-1 bg-tertiary-fixed/30 p-6 rounded-xl border border-tertiary-container/10 relative overflow-hidden flex flex-col justify-between">
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-tertiary-container" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-on-tertiary-fixed-variant font-bold text-sm">AI SUGGESTION</span>
+</div>
+<p class="text-on-tertiary-fixed-variant text-sm leading-tight">Optimiza tu sección de 'Proyectos' para destacar tus habilidades en React.</p>
+</div>
+<div class="mt-4">
+<button class="text-tertiary-container font-bold text-sm flex items-center gap-1 hover:underline">
+                        Optimizar ahora
+                        <span class="material-symbols-outlined text-xs" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<!-- Subtle Gradient Pulse -->
+<div class="absolute -right-8 -bottom-8 w-24 h-24 bg-tertiary-fixed-dim blur-3xl opacity-50"></div>
+</div>
+</section>
+<!-- Resume List Section -->
+<section>
+<div class="flex items-center justify-between mb-8">
+<h2 class="font-headline font-bold text-2xl text-on-surface">Mis Currículums</h2>
+<button class="text-primary font-semibold text-sm hover:underline">Ver todos</button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Resume Card 1 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-[3/4] bg-surface-container-low rounded-xl overflow-hidden mb-4 border border-outline-variant/10 transition-transform group-hover:-translate-y-2 group-hover:shadow-lg">
+<img alt="Resume thumbnail" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all opacity-80 group-hover:opacity-100" data-alt="Modern minimalist resume layout with clean typography, white space, and professional blue accents on premium paper texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFdcqgz9jIFX74a818ND3H48REqiVQaTqmVExC2S3lYyoKNl32EqfB9zXt-gXMGBTnooeFtjG4dSrFDf-cL_oBeSq26E6hHMCcAjxCmWJUQFtFxu2teJ9aC4jEZUad5iF3n4SF0q0xcRSBs5pVpOIn_3bq5NQUXMTERpqZIhhK6iXmlvyjvtx8jiuvK_f5TxXenhEoV07SWd4QKLwwafvrlxj7dZdyfIWgD4KwU5avoOoMdYAEqyM_ow77ilWZP0Ib_ufoBYbklA4K"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors"></div>
+<div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+<div class="bg-white/90 backdrop-blur-md p-2 rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-on-surface" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+</div>
+<h3 class="font-headline font-bold text-lg text-on-surface group-hover:text-primary transition-colors">Desarrollador Fullstack</h3>
+<p class="text-on-surface-variant text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>
+                        Actualizado: 12 Oct 2023
+                    </p>
+</div>
+<!-- Resume Card 2 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-[3/4] bg-surface-container-low rounded-xl overflow-hidden mb-4 border border-outline-variant/10 transition-transform group-hover:-translate-y-2 group-hover:shadow-lg">
+<img alt="Resume thumbnail" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all opacity-80 group-hover:opacity-100" data-alt="Elegant creative professional CV template with soft grey background and sophisticated serif typography for an editorial look" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkVzMplYgeg1TCE8gO2s0hIeIFo-QMfOih52-xFylmNM3KzdvZuWV40CvNn0pQQqA8QOiMqOZHQR9EP6gyAbMAXeHG4v3F-OI3HsGxHKjueHveziQFqo77dOQs7S8DFbSN5lpxR78l3WsekrYoCq_YGHzDpkrFiP_8F8-et_VVTnnpP9_2NBF9cHpuNyALw1WgERyAmifutzNoY-upQqUOxqVnpnzVmlRq4hCUUc5wHB6FH2UEKLhugBNqS_Q7a127V9ijpVHr9Vdq"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors"></div>
+<div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+<div class="bg-white/90 backdrop-blur-md p-2 rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-on-surface" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+</div>
+<h3 class="font-headline font-bold text-lg text-on-surface group-hover:text-primary transition-colors">Diseñador UX/UI - Senior</h3>
+<p class="text-on-surface-variant text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>
+                        Actualizado: 05 Sep 2023
+                    </p>
+</div>
+<!-- Empty/New Slot -->
+<div class="group cursor-pointer border-2 border-dashed border-outline-variant/30 rounded-xl flex flex-col items-center justify-center aspect-[3/4] hover:bg-surface-container-low transition-all">
+<div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="add">add</span>
+</div>
+<p class="font-headline font-bold text-on-surface-variant">Nueva Versión</p>
+<p class="text-on-surface-variant/60 text-xs px-8 text-center mt-2">Crea una variante optimizada para un puesto específico</p>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar Shell -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pt-2 pb-6 px-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0_-4px_12px_rgba(0,0,0,0.05)] z-50 rounded-t-2xl">
+<!-- Inicio (Active) -->
+<a class="flex flex-col items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-100 rounded-xl px-3 py-1.5 scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-inter text-[11px] font-semibold">Inicio</span>
+</a>
+<!-- Mis CVs -->
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-inter text-[11px] font-semibold">Mis CVs</span>
+</a>
+<!-- Plantillas -->
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800" href="#">
+<span class="material-symbols-outlined" data-icon="tactic">tactic</span>
+<span class="font-inter text-[11px] font-semibold">Plantillas</span>
+</a>
+<!-- Entrevista -->
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-inter text-[11px] font-semibold">Entrevista</span>
+</a>
+</nav>
+<!-- Desktop Navigation Side Anchors (Implicit) -->
+<div class="hidden md:flex fixed left-6 top-1/2 -translate-y-1/2 flex-col gap-6 p-4 bg-white/40 backdrop-blur-sm rounded-full shadow-ambient border border-outline-variant/10">
+<button class="p-3 bg-primary text-white rounded-full shadow-lg"><span class="material-symbols-outlined" data-icon="dashboard">dashboard</span></button>
+<button class="p-3 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined" data-icon="description">description</span></button>
+<button class="p-3 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined" data-icon="tactic">tactic</span></button>
+<button class="p-3 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span></button>
+</div>
+</body></html>
