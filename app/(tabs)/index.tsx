@@ -1,52 +1,47 @@
 import GlassHeader from "@/components/GlassHeader";
 import GradientButton from "@/components/GradientButton";
 import StatCard from "@/components/StatCard";
+import CvCard from "@/components/CvCard";
 import { useAuth } from "@/src/lib/auth-context";
 import { getLatestInterview, getResumes, getSuggestions } from "@/src/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "expo-router";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, View, Platform, useWindowDimensions } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
-function useDashboardData(userId: string | undefined) {
-  const resumes = useQuery({
-    queryKey: ["resumes", userId],
-    queryFn: () => getResumes(userId!),
-    enabled: !!userId,
+export default function DashboardScreen() {
+  const { user, profile } = useAuth();
+  const { width: screenWidth } = useWindowDimensions();
+  const isWeb = Platform.OS === "web";
+
+  const { data: resumes, isLoading: resumesLoading } = useQuery({
+    queryKey: ["resumes", user?.id],
+    queryFn: () => getResumes(user!.id),
+    enabled: !!user,
   });
 
-  const interview = useQuery({
-    queryKey: ["latest-interview", userId],
-    queryFn: () => getLatestInterview(userId!),
-    enabled: !!userId,
+  const { data: interview } = useQuery({
+    queryKey: ["latest-interview", user?.id],
+    queryFn: () => getLatestInterview(user!.id),
+    enabled: !!user,
   });
 
-  const firstResumeId = resumes.data?.[0]?.id;
-  const suggestions = useQuery({
+  const firstResumeId = resumes?.[0]?.id;
+  const { data: suggestions } = useQuery({
     queryKey: ["suggestions", firstResumeId],
     queryFn: () => getSuggestions(firstResumeId!),
     enabled: !!firstResumeId,
   });
 
-  const totalViews = resumes.data?.reduce(
-    (sum, r) => sum + (r.score || 0),
-    0,
-  );
-
-  return { resumes, interview, suggestions, totalViews };
-}
-
-export default function DashboardScreen() {
-  const { user, profile } = useAuth();
-  const { resumes, interview, suggestions, totalViews } = useDashboardData(user?.id);
-
   const name = profile?.name ?? "Usuario";
-  const simScore = interview.data?.score ?? 0;
-  const aiSuggestion = suggestions.data?.[0]?.suggestion;
-  const resumeCount = resumes.data?.length ?? 0;
-  const bestScore = resumes.data?.reduce((max, r) => Math.max(max, r.score || 0), 0) ?? 65;
+  const simScore = interview?.score ?? 0;
+  const aiSuggestion = suggestions?.[0]?.suggestion;
+  const resumeCount = resumes?.length ?? 0;
+  const bestScore = resumes?.reduce((max, r) => Math.max(max, r.score || 0), 0) ?? 65;
   const profileScore = Math.max(bestScore, 65);
   const avatarUri = profile?.avatar_url || undefined;
+
+  const webCardWidth = isWeb ? Math.min(screenWidth * 0.28, 260) : undefined;
 
   return (
     <View className="flex-1 bg-surface">
@@ -107,14 +102,6 @@ export default function DashboardScreen() {
               }
             />
 
-            <StatCard
-              label="Visualizaciones"
-              icon="👁️"
-              iconBg="bg-secondary-container"
-              value={String(totalViews ?? 0)}
-              trend="+12% respecto a la semana pasada"
-            />
-
             {aiSuggestion && (
               <View className="bg-tertiary-fixed/30 p-6 rounded-xl border border-tertiary-container/10 relative overflow-hidden">
                 <View className="flex-row items-center gap-2 mb-3">
@@ -148,49 +135,54 @@ export default function DashboardScreen() {
               </Pressable>
             </View>
 
-            {resumes.isLoading ? (
+            {resumesLoading ? (
               <Text className="text-on-surface-variant font-body">
                 Cargando CVs...
               </Text>
             ) : (
-              <View className="gap-8">
-                {(resumes.data ?? []).map((resume) => {
-                  const thumbUri = resume.thumbnail_url || undefined;
-                  return (
-                    <Pressable key={resume.id} className="group">
-                      <View className="relative">
-                        <View
-                          className="rounded-xl overflow-hidden mb-4 border border-outline-variant/10 shadow-sm bg-surface-container-high items-center justify-center"
-                          style={{ aspectRatio: 3 / 4 }}
-                        >
-                          {thumbUri ? (
-                            <Image source={{ uri: thumbUri }} className="flex-1 object-cover" />
-                          ) : (
-                            <View className="items-center justify-center p-6">
-                              <MaterialIcons name="description" size={48} color="#bac7de" />
-                              <Text className="text-on-surface-variant font-body text-xs mt-2 text-center">{resume.title}</Text>
-                            </View>
-                          )}
-                          <View className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2 py-0.5 rounded-full shadow-sm">
-                            <Text className="text-primary text-[10px] font-body-bold">
-                              {resume.score}%
-                            </Text>
-                          </View>
-                        </View>
-                        <Text className="font-headline text-lg text-on-surface">
-                          {resume.title}
-                        </Text>
-                        <Text className="text-on-surface-variant font-body text-sm mt-0.5">
-                          Actualizado: {new Date(resume.updated_at).toLocaleDateString()}
-                        </Text>
+              <View
+                className={isWeb ? "flex-row flex-wrap" : ""}
+                style={isWeb ? { gap: 24, justifyContent: "flex-start" } : { gap: 32 }}
+              >
+                {(resumes ?? []).map((resume) => (
+                  <Pressable key={resume.id} className="group">
+                    <View
+                      style={
+                        isWeb
+                          ? { width: webCardWidth }
+                          : undefined
+                      }
+                    >
+                      <View
+                        className="rounded-xl overflow-hidden mb-4 border border-outline-variant/10 shadow-sm bg-surface-container-high"
+                        style={{ aspectRatio: 3 / 4 }}
+                      >
+                        <CvCard
+                          data={resume.data}
+                          templateId={resume.template_id || "moderno"}
+                          score={resume.score || 0}
+                        />
                       </View>
-                    </Pressable>
-                  );
-                })}
+                      <Text className="font-headline text-lg text-on-surface">
+                        {resume.title}
+                      </Text>
+                      <Text className="text-on-surface-variant font-body text-sm mt-0.5">
+                        Actualizado: {new Date(resume.updated_at).toLocaleDateString()}
+                      </Text>
+                    </View>
+                  </Pressable>
+                ))}
 
                 <Link href="/editor" asChild>
                   <Pressable>
-                    <View className="border-2 border-dashed border-outline-variant/30 rounded-xl items-center justify-center aspect-[3/4] hover:bg-surface-container-low transition-all">
+                    <View
+                      className="border-2 border-dashed border-outline-variant/30 rounded-xl items-center justify-center hover:bg-surface-container-low transition-all"
+                      style={
+                        isWeb
+                          ? { width: webCardWidth, aspectRatio: 3 / 4 }
+                          : { aspectRatio: 3 / 4 }
+                      }
+                    >
                       <View className="w-16 h-16 rounded-full bg-secondary-container items-center justify-center mb-4">
                         <MaterialIcons name="add" size={28} color="#0b55cf" />
                       </View>
