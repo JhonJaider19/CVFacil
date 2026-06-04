@@ -1,3 +1,4 @@
+import React from "react";
 import { View, Text } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import type { ResumeData } from "@/src/lib/types";
@@ -8,7 +9,7 @@ interface CvCardProps {
   score: number;
 }
 
-export default function CvCard({ data, score }: CvCardProps) {
+export default React.memo(function CvCard({ data, score }: CvCardProps) {
   if (!data?.fullName && !data?.title) {
     return (
       <View className="items-center justify-center flex-1 p-6">
@@ -48,4 +49,4 @@ export default function CvCard({ data, score }: CvCardProps) {
       </View>
     </View>
   );
-}
+});

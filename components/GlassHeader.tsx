@@ -2,6 +2,7 @@ import { useAuth } from "@/src/lib/auth-context";
 import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import { STATUS_BAR_HEIGHT } from "@/src/lib/status-bar";
 
 interface GlassHeaderProps {
   title?: string;
@@ -25,8 +26,8 @@ export default function GlassHeader({ title = "CVFácil", children }: GlassHeade
   }
 
   return (
-    <View className="absolute top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl">
-      <View className="flex-row items-center justify-between px-6 h-16">
+    <View className="absolute top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl" style={{ paddingTop: STATUS_BAR_HEIGHT }}>
+      <View className="w-full max-w-6xl mx-auto px-6 flex-row items-center justify-between" style={{ height: 64 }}>
         <Text className="text-xl font-display tracking-tight text-primary">
           {title}
         </Text>

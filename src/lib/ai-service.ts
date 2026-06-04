@@ -1,14 +1,10 @@
 import { insforge } from "./insforge";
 
-const DEFAULT_MODEL = "gpt-4o-mini";
-const INTERVIEW_MODEL = "claude-sonnet-4.5";
+const DEFAULT_MODEL = "openrouter/free";
 
 export async function chatCompletion(messages: { role: string; content: string }[], model = DEFAULT_MODEL) {
-  const { data, error } = await insforge.ai.chat.completions.create({
-    model,
-    messages: messages as any,
-    temperature: 0.7,
-    maxTokens: 1024,
+  const { data, error } = await insforge.functions.invoke("ai-proxy", {
+    body: { messages, model },
   });
   if (error) throw new Error(error.message);
   return data as { choices: Array<{ message: { content: string } }> };
@@ -22,7 +18,7 @@ export async function generateInterviewQuestion(context: string) {
     },
     { role: "user", content: context || "Inicia la entrevista preguntándome sobre mi experiencia profesional." },
   ];
-  return chatCompletion(messages, INTERVIEW_MODEL);
+  return chatCompletion(messages);
 }
 
 export async function generateCvSuggestion(resumeData: any) {

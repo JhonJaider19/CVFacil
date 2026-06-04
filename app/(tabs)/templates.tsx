@@ -6,6 +6,7 @@ import { buildPdfHtml } from "@/src/lib/pdf-html";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { STATUS_BAR_HEIGHT } from "@/src/lib/status-bar";
 import { useState } from "react";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
@@ -75,9 +76,9 @@ export default function TemplatesScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingTop: 96, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingTop: 64 + STATUS_BAR_HEIGHT, paddingBottom: 32 }}
       >
-        <View className="px-6">
+        <View className="w-full max-w-6xl mx-auto px-6">
           {/* Preview */}
           <View className="flex-row justify-between items-end mb-6">
             <View>
@@ -212,8 +213,8 @@ export default function TemplatesScreen() {
         </View>
 
         {/* Templates */}
-        <View className="px-6 mb-8">
-          <View className="flex-row justify-between items-center mb-6">
+        <View className="-mx-6 mb-8">
+          <View className="flex-row justify-between items-center mb-6 px-6">
             <Text className="font-headline text-2xl tracking-tight text-on-surface">Seleccionar Plantilla</Text>
           </View>
 

@@ -1,3 +1,4 @@
+import React from "react";
 import { Text, View } from "react-native";
 
 interface StatCardProps {
@@ -10,7 +11,7 @@ interface StatCardProps {
   className?: string;
 }
 
-export default function StatCard({
+export default React.memo(function StatCard({
   label,
   icon,
   iconBg = "bg-tertiary-fixed",
@@ -46,4 +47,4 @@ export default function StatCard({
       </View>
     </View>
   );
-}
+});

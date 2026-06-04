@@ -1,4 +1,5 @@
 import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createContext,
@@ -30,6 +31,8 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
+WebBrowser.maybeCompleteAuthSession();
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
@@ -109,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (provider: string) => {
       const redirectTo = Platform.select({
         web: window.location.origin,
-        default: "cvfacil://oauth-callback",
+        default: makeRedirectUri({ scheme: "cvfacil", path: "oauth-callback" }),
       });
 
       const { data, error } = await insforge.auth.signInWithOAuth({

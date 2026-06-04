@@ -53,3 +53,12 @@ yarn-error.*
 .roo
 .trae
 .windsurf
+
+# Local build scripts with machine paths
+run-android.cmd
+
+# Edge function source (safe in repo but keeping out for security)
+insforge/
+
+# Type declarations for Deno edge functions (keep local)
+types/

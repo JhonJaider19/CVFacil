@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { MaterialIcons } from "@expo/vector-icons";
 
@@ -10,8 +10,10 @@ const tabIcons: Record<string, { icon: string; label: string }> = {
 };
 
 export default function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const bottomInset = Platform.OS === "android" ? 8 : 24;
+
   return (
-    <View className="flex-row items-center justify-around bg-surface pb-6 pt-3 px-4 border-t border-outline-variant/10">
+    <View className="flex-row items-center justify-around bg-surface pt-3 px-4 border-t border-outline-variant/10" style={{ paddingBottom: bottomInset }}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const isFocused = state.index === index;

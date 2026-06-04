@@ -1,11 +1,13 @@
 import { useAuth } from "@/src/lib/auth-context";
-import { createResume, getResumes, updateResume } from "@/src/lib/api";
+import { createResume, getResume, getResumes, updateResume } from "@/src/lib/api";
 import { generateCvScore } from "@/src/lib/ai-service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View, Platform } from "react-native";
+import { STATUS_BAR_HEIGHT } from "@/src/lib/status-bar";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams } from "expo-router";
 import GlassHeader from "@/components/GlassHeader";
 import GhostInput from "@/components/GhostInput";
 import AiChip from "@/components/AiChip";
@@ -17,31 +19,33 @@ const emptyEducation: Education = { degree: "", institution: "", startDate: "", 
 
 export default function EditorScreen() {
   const { user } = useAuth();
+  const { id } = useLocalSearchParams<{ id?: string }>();
   const queryClient = useQueryClient();
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { data: resumeData } = useQuery({
+    queryKey: ["resume", id],
+    queryFn: () => getResume(id!),
+    enabled: !!id,
+  });
 
   const { data: resumes } = useQuery({
     queryKey: ["resumes", user?.id],
     queryFn: () => getResumes(user!.id),
-    enabled: !!user,
+    enabled: !!user && !id,
   });
 
-  const currentResume = resumes?.[0];
-  const initialData = currentResume?.data ?? {};
+  const currentResume = id ? resumeData : resumes?.[0];
 
-  const [fullName, setFullName] = useState(initialData.fullName ?? "");
-  const [email, setEmail] = useState(initialData.email ?? "");
-  const [phone, setPhone] = useState(initialData.phone ?? "");
-  const [location, setLocation] = useState(initialData.location ?? "");
-  const [title, setTitle] = useState(initialData.title ?? "");
-  const [summary, setSummary] = useState(initialData.summary ?? "");
-  const [experiences, setExperiences] = useState<Experience[]>(
-    initialData.experience?.length ? initialData.experience : [emptyExperience],
-  );
-  const [education, setEducation] = useState<Education[]>(
-    initialData.education?.length ? initialData.education : [emptyEducation],
-  );
-  const [skills, setSkills] = useState<string[]>(initialData.skills ?? []);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [location, setLocation] = useState("");
+  const [title, setTitle] = useState("");
+  const [summary, setSummary] = useState("");
+  const [experiences, setExperiences] = useState<Experience[]>([emptyExperience]);
+  const [education, setEducation] = useState<Education[]>([emptyEducation]);
+  const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
 
   const [showDatePicker, setShowDatePicker] = useState<{ type: "exp" | "edu"; index: number; field: "startDate" | "endDate" } | null>(null);
@@ -49,15 +53,15 @@ export default function EditorScreen() {
   useEffect(() => {
     if (!currentResume) return;
     const d = currentResume.data;
-    setFullName(d.fullName ?? fullName);
-    setEmail(d.email ?? email);
-    setPhone(d.phone ?? phone);
-    setLocation(d.location ?? location);
-    setTitle(d.title ?? title);
-    setSummary(d.summary ?? summary);
-    if (d.experience?.length) setExperiences(d.experience);
-    if (d.education?.length) setEducation(d.education);
-    if (d.skills?.length) setSkills(d.skills);
+    setFullName(d.fullName ?? "");
+    setEmail(d.email ?? "");
+    setPhone(d.phone ?? "");
+    setLocation(d.location ?? "");
+    setTitle(d.title ?? "");
+    setSummary(d.summary ?? "");
+    setExperiences(d.experience?.length ? d.experience : [emptyExperience]);
+    setEducation(d.education?.length ? d.education : [emptyEducation]);
+    setSkills(d.skills ?? []);
   }, [currentResume?.id]);
 
   const buildData = useCallback((): ResumeData => ({
@@ -72,13 +76,16 @@ export default function EditorScreen() {
       if (!user) throw new Error("Not authenticated");
       const data = buildData();
       const score = await generateCvScore(data);
-      if (!currentResume) {
-        return createResume(user.id, "Mi CV");
+      if (id) {
+        return updateResume(id, { data, score });
       }
-      return updateResume(currentResume.id, { data, score });
+      return createResume(user.id, "Mi CV");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["resumes", user?.id] });
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: ["resume", id] });
+      }
     },
   });
 
@@ -158,10 +165,10 @@ export default function EditorScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingTop: 96, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingTop: 64 + STATUS_BAR_HEIGHT, paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="px-6">
+        <View className="w-full max-w-6xl mx-auto px-6">
           {/* Progress */}
           <View className="mb-8">
             <View className="flex-row justify-between items-end mb-3">

@@ -18,6 +18,7 @@ import {
   TextInput,
   View
 } from "react-native";
+import { STATUS_BAR_HEIGHT } from "@/src/lib/status-bar";
 
 const quickActions = [
   {
@@ -239,10 +240,10 @@ export default function AssistantScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingTop: 96, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingTop: 64 + STATUS_BAR_HEIGHT, paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="px-6">
+        <View className="w-full max-w-6xl mx-auto px-6">
           <Text className="font-headline text-3xl text-on-surface tracking-tight mb-2">
             Asistente IA
           </Text>
@@ -250,10 +251,11 @@ export default function AssistantScreen() {
             Tu coach profesional con inteligencia artificial
           </Text>
 
-          <View className="gap-4 mb-10">
+          <View className="flex-row flex-wrap gap-4 mb-10">
             {quickActions.map((action) => (
               <Pressable
                 key={action.id}
+                className="w-full sm:flex-1 min-w-[280px]"
                 onPress={() => handleQuickAction(action.id)}
               >
                 <LinearGradient
@@ -538,10 +540,10 @@ function InterviewMode({
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingTop: 96, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingTop: 64 + STATUS_BAR_HEIGHT, paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="px-6">
+        <View className="w-full max-w-6xl mx-auto px-6">
           <View className="flex-row justify-between mb-8">
             <View className="flex-1 bg-surface-container-lowest p-4 rounded-xl mr-2 border border-outline-variant/10">
               <View className="flex-row items-center gap-2 mb-1">
