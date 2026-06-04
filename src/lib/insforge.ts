@@ -1,3 +1,4 @@
+import "./crypto-polyfill";
 import { createClient } from "@insforge/sdk";
 
 const baseUrl = process.env.EXPO_PUBLIC_INSFORGE_URL;

@@ -3,12 +3,15 @@ import { useAuth } from "@/src/lib/auth-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VerifyScreen() {
   const { verifyEmail, resendOtp } = useAuth();
@@ -49,13 +52,9 @@ export default function VerifyScreen() {
 
   return (
     <View className="flex-1 bg-surface">
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Glass Header */}
-        <View className="h-16 flex-row items-center px-6"
+      <SafeAreaView edges={["top"]} className="bg-surface/80">
+        <View
+          className="h-16 flex-row items-center px-6"
           style={{ backgroundColor: "rgba(248, 249, 250, 0.8)", backdropFilter: "blur(12px)" as any }}
         >
           <View className="flex-row items-center gap-2">
@@ -67,9 +66,20 @@ export default function VerifyScreen() {
             </Text>
           </View>
         </View>
+      </SafeAreaView>
 
-        <View className="flex-1 items-center justify-center px-6 pt-16 pb-12">
-          <View className="w-full max-w-[480px] gap-10">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1"
+      >
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="flex-1 items-center justify-center px-6 pt-12 pb-12">
+            <View className="w-full max-w-[480px] gap-10">
             {/* Header */}
             <View className="gap-2">
               <Text className="text-3xl md:text-4xl font-extrabold font-headline tracking-tight text-on-surface">
@@ -131,7 +141,8 @@ export default function VerifyScreen() {
             </Pressable>
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }

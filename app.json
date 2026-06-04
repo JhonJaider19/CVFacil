@@ -29,20 +29,8 @@
           "autoVerify": true,
           "data": [
             {
-              "scheme": "cvfacil"
-            }
-          ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
-        },
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "cvfacil"
+              "scheme": "cvfacil",
+              "host": "oauth-callback"
             }
           ],
           "category": [

@@ -1,22 +1,32 @@
 import { useAuth } from "@/src/lib/auth-context";
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignInScreen() {
   const { signIn, signInWithOAuth, resetPassword } = useAuth();
+  const params = useLocalSearchParams<{ error?: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (params.error) {
+      setError(params.error);
+    }
+  }, [params.error]);
 
   async function handleSignIn() {
     if (!email.trim()) {
@@ -61,7 +71,8 @@ export default function SignInScreen() {
     setOauthLoading(provider);
     try {
       await signInWithOAuth(provider);
-      router.replace("/(tabs)");
+      // Navigation is handled by app/oauth-callback.tsx after the
+      // code exchange completes. Do not navigate here.
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -71,13 +82,9 @@ export default function SignInScreen() {
 
   return (
     <View className="flex-1 bg-surface">
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Glass Header */}
-        <View className="fixed top-0 w-full z-50 h-16 flex-row items-center px-6"
+      <SafeAreaView edges={["top"]} className="bg-surface/80">
+        <View
+          className="h-16 flex-row items-center px-6"
           style={{ backgroundColor: "rgba(248, 249, 250, 0.8)", backdropFilter: "blur(12px)" as any }}
         >
           <View className="flex-row items-center gap-2">
@@ -89,14 +96,25 @@ export default function SignInScreen() {
             </Text>
           </View>
         </View>
+      </SafeAreaView>
 
-        {/* Background blur decoration */}
-        <View className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full pointer-events-none"
-          style={{ transform: [{ scale: 3 }], position: "absolute", bottom: -80, left: -80 }}
-        />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1"
+      >
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Background blur decoration */}
+          <View className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full pointer-events-none"
+            style={{ transform: [{ scale: 3 }], position: "absolute", bottom: -80, left: -80 }}
+          />
 
-        <View className="flex-1 items-center justify-center px-6 pt-24 pb-12">
-          <View className="w-full max-w-[480px] gap-10">
+          <View className="flex-1 items-center justify-center px-6 pt-12 pb-12">
+            <View className="w-full max-w-[480px] gap-10">
             {/* Welcome Header */}
             <View className="gap-2">
               <Text className="text-3xl md:text-4xl font-extrabold font-headline tracking-tight text-on-surface">
@@ -246,7 +264,8 @@ export default function SignInScreen() {
             </View>
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }

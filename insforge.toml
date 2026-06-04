@@ -4,6 +4,10 @@ allowed_redirect_urls = [
   "http://localhost:8081",
   "http://localhost:19006",
   "https://j67tvrnn.us-east.insforge.app",
+  "exp://192.168.100.247:8082/--/oauth-callback",
+  "exp://localhost:8081/--/oauth-callback",
+  "exp://127.0.0.1:8081/--/oauth-callback",
+  "exp://10.0.2.2:8081/--/oauth-callback",
 ]
 require_email_verification = true
 verify_email_method = "code"

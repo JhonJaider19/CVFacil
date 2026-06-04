@@ -3,12 +3,15 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignUpScreen() {
   const { signUp, signInWithOAuth } = useAuth();
@@ -56,7 +59,8 @@ export default function SignUpScreen() {
     setOauthLoading(provider);
     try {
       await signInWithOAuth(provider);
-      router.replace("/(tabs)");
+      // Navigation is handled by app/oauth-callback.tsx after the
+      // code exchange completes. Do not navigate here.
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -74,13 +78,9 @@ export default function SignUpScreen() {
         style={{ backgroundColor: "rgba(218, 226, 255, 0.08)", filter: "blur(60px)" as any }}
       />
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Glass Header with back button */}
-        <View className="h-14 flex-row items-center justify-between px-6 z-50"
+      <SafeAreaView edges={["top"]} className="bg-surface/80">
+        <View
+          className="h-14 flex-row items-center justify-between px-6"
           style={{ backgroundColor: "rgba(248, 249, 250, 0.8)", backdropFilter: "blur(12px)" as any }}
         >
           <View className="flex-row items-center gap-4">
@@ -97,9 +97,20 @@ export default function SignUpScreen() {
             </Text>
           </Pressable>
         </View>
+      </SafeAreaView>
 
-        <View className="flex-1 items-center justify-center pt-12 pb-12 px-4 relative">
-          <View className="w-full max-w-md z-10">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1"
+      >
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="flex-1 items-center justify-center pt-12 pb-12 px-4 relative">
+            <View className="w-full max-w-md z-10">
             {/* Header */}
             <View className="mb-10">
               <Text className="font-headline text-3xl font-extrabold tracking-tight text-on-surface text-center mb-2">
@@ -264,7 +275,8 @@ export default function SignUpScreen() {
             </Text>
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }

@@ -52,7 +52,7 @@ export default function DashboardScreen() {
     enabled: !!firstResumeId,
   });
 
-  const name = profile?.name ?? "Usuario";
+  const name = profile?.name ?? "";
   const simScore = interview?.score ?? 0;
   const aiSuggestion = suggestions?.[0]?.suggestion;
   const resumeCount = resumes?.length ?? 0;
