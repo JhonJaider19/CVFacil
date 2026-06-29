@@ -1,14 +1,12 @@
-import { useAuth } from "@/src/lib/auth-context";
-import { insforge } from "@/src/lib/insforge";
+import { useCurrentUserId } from "@/src/lib/use-current-user";
 import {
   createResume,
   getResume,
-  getResumes,
   updateResume,
   uploadResumePhoto,
 } from "@/src/lib/api";
 import { generateCvScore, chatCompletion } from "@/src/lib/ai-service";
-import { buildPdfHtml } from "@/src/lib/pdf-html";
+import { generateAndSharePdf } from "@/src/lib/pdf-export";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View, Image, Alert, ActivityIndicator } from "react-native";
@@ -22,16 +20,14 @@ import AiChip from "@/components/AiChip";
 import type { ResumeData, Experiencia, Educacion, Idioma, Certificacion } from "@/src/lib/types";
 import { normalizeResumeData } from "@/src/lib/types";
 import * as ImagePicker from "expo-image-picker";
-import * as Print from "expo-print";
-import * as Sharing from "expo-sharing";
 
 export default function EditorScreen() {
-  const { user } = useAuth();
   const { id: urlId, templateId } = useLocalSearchParams<{ id?: string; templateId?: string }>();
   const queryClient = useQueryClient();
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSavingRef = useRef(false);
   const [resumeId, setResumeId] = useState<string | undefined>(urlId);
+  const getUserId = useCurrentUserId();
 
   const { data: resumeData } = useQuery({
     queryKey: ["resume", resumeId],
@@ -103,9 +99,8 @@ export default function EditorScreen() {
       if (resumeId) {
         return updateResume(resumeId, { data, score, template_id: currentTemplateId });
       }
-      const { data: authData, error: authError } = await insforge.auth.getCurrentUser();
-      const userId = authData?.user?.id ?? user?.id;
-      if (authError || !userId) throw new Error("No hay sesión activa");
+      const userId = await getUserId();
+      if (!userId) throw new Error("No hay sesión activa");
       const title = (() => {
         const now = new Date();
         const day = now.getDate().toString().padStart(2, "0");
@@ -149,7 +144,7 @@ export default function EditorScreen() {
   }, [saveMutation]);
 
   async function pickImage() {
-    const userId = await getFreshUserId();
+    const userId = await getUserId();
     if (!userId) {
       Alert.alert("Sesión requerida", "Inicia sesión para agregar una foto de perfil.");
       return;
@@ -170,7 +165,7 @@ export default function EditorScreen() {
   }
 
   async function takePhoto() {
-    const userId = await getFreshUserId();
+    const userId = await getUserId();
     if (!userId) {
       Alert.alert("Sesión requerida", "Inicia sesión para agregar una foto de perfil.");
       return;
@@ -189,19 +184,8 @@ export default function EditorScreen() {
     await uploadAndSetPhoto(result.assets[0].uri);
   }
 
-  async function getFreshUserId(): Promise<string | null> {
-    try {
-      const { data: authData } = await insforge.auth.getCurrentUser();
-      const sdkId = authData?.user?.id;
-      if (sdkId) return sdkId;
-    } catch {
-      // fall through to context fallback
-    }
-    return user?.id ?? null;
-  }
-
   async function uploadAndSetPhoto(localUri: string) {
-    const userId = await getFreshUserId();
+    const userId = await getUserId();
     if (!userId) return;
     setPhotoUploading(true);
     try {
@@ -373,14 +357,7 @@ export default function EditorScreen() {
   async function handlePreview() {
     setPdfLoading(true);
     try {
-      const data = buildData();
-      const html = buildPdfHtml(data, currentTemplateId);
-      const { uri } = await Print.printToFileAsync({ html });
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri, { mimeType: "application/pdf" });
-      }
-    } catch (e: any) {
-      Alert.alert("Error", e.message || "No se pudo generar el PDF");
+      await generateAndSharePdf(buildData(), currentTemplateId);
     } finally {
       setPdfLoading(false);
     }

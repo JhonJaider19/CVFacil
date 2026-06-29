@@ -7,7 +7,6 @@ import type {
   Profile,
   Resume,
   ResumeData,
-  ResumeTemplate,
 } from "./types";
 
 const AVATAR_BUCKET = "avatars";
@@ -215,16 +214,6 @@ export async function getInterviewMessages(interviewId: string) {
     .order("created_at", { ascending: true });
   if (error) throw error;
   return data as InterviewMessage[];
-}
-
-export async function getTemplates() {
-  const { data, error } = await insforge.database
-    .from("resume_templates")
-    .select("*")
-    .eq("is_active", true)
-    .order("name", { ascending: true });
-  if (error) throw error;
-  return data as ResumeTemplate[];
 }
 
 export async function updateResumeTemplate(resumeId: string, templateId: string) {

@@ -138,17 +138,6 @@ export interface InterviewMessage {
   created_at: string;
 }
 
-export interface ResumeTemplate {
-  id: string;
-  name: string;
-  description: string | null;
-  thumbnail_url: string | null;
-  category: string;
-  styles: Record<string, any>;
-  is_active: boolean;
-  created_at: string;
-}
-
 export interface AiSuggestion {
   id: string;
   resume_id: string;

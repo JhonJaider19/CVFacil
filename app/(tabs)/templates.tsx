@@ -1,8 +1,7 @@
 import GlassHeader from "@/components/GlassHeader";
 import GradientButton from "@/components/GradientButton";
-import { useAuth } from "@/src/lib/auth-context";
 import { getResume, getResumes, updateResumeTemplate } from "@/src/lib/api";
-import { buildPdfHtml } from "@/src/lib/pdf-html";
+import { generateAndSharePdf } from "@/src/lib/pdf-export";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Pressable, ScrollView, Text, View, Alert } from "react-native";
@@ -11,8 +10,6 @@ import { useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { normalizeResumeData } from "@/src/lib/types";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Print from "expo-print";
-import * as Sharing from "expo-sharing";
 
 const TEMPLATES = [
   {
@@ -39,7 +36,6 @@ const TEMPLATES = [
 ];
 
 export default function TemplatesScreen() {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [selectedTemplate, setSelectedTemplate] = useState("modern-beige");
@@ -93,13 +89,7 @@ export default function TemplatesScreen() {
     setPdfLoading(true);
     try {
       const data = normalizeResumeData(currentResume.data);
-      const html = buildPdfHtml(data, selectedTemplate);
-      const { uri } = await Print.printToFileAsync({ html });
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri, { mimeType: "application/pdf" });
-      }
-    } catch (e: any) {
-      console.error("PDF error:", e);
+      await generateAndSharePdf(data, selectedTemplate);
     } finally {
       setPdfLoading(false);
     }

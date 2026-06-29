@@ -1,18 +1,15 @@
 import GlassHeader from "@/components/GlassHeader";
-import CvCard from "@/components/CvCard";
-import ConfirmDialog from "@/components/ConfirmDialog";
 import GradientButton from "@/components/GradientButton";
-import { useAuth } from "@/src/lib/auth-context";
+import ResumeGrid from "@/components/ResumeGrid";
 import { deleteResume, getResumes } from "@/src/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { STATUS_BAR_HEIGHT } from "@/src/lib/status-bar";
 import { MaterialIcons } from "@expo/vector-icons";
 
 export default function ResumesScreen() {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const { width: screenWidth } = useWindowDimensions();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
@@ -55,9 +52,9 @@ export default function ResumesScreen() {
               </Text>
             </View>
             <GradientButton onPress={() => router.push("/editor")}>
-                <MaterialIcons name="add" size={18} color="#ffffff" />
-                <Text className="text-white font-headline text-sm">Nuevo</Text>
-              </GradientButton>
+              <MaterialIcons name="add" size={18} color="#ffffff" />
+              <Text className="text-white font-headline text-sm">Nuevo</Text>
+            </GradientButton>
           </View>
 
           {isLoading ? (
@@ -68,58 +65,26 @@ export default function ResumesScreen() {
               <Text className="text-on-surface-variant font-body text-lg mt-4 mb-2">No tienes currículums</Text>
               <Text className="text-on-surface-variant/60 font-body text-sm mb-6">Crea tu primer CV para empezar</Text>
               <GradientButton onPress={() => router.push("/editor")}>
-                  <MaterialIcons name="add-circle" size={20} color="#ffffff" />
-                  <Text className="text-white font-headline">Crear mi primer CV</Text>
-                </GradientButton>
+                <MaterialIcons name="add-circle" size={20} color="#ffffff" />
+                <Text className="text-white font-headline">Crear mi primer CV</Text>
+              </GradientButton>
             </View>
           ) : (
-            <View className="flex-row flex-wrap" style={{ gap }}>
-              {(resumes ?? []).map((resume) => (
-                <View key={resume.id} style={cardWidth ? { width: cardWidth } : { width: "100%" }}>
-                  <View
-                    className="rounded-xl overflow-hidden mb-4 border border-outline-variant/10 shadow-sm bg-surface-container-high"
-                    style={{ aspectRatio: 3 / 4 }}
-                  >
-                    <Pressable
-                      className="flex-1"
-                      onPress={() => router.push(`/editor?id=${resume.id}`)}
-                    >
-                      <CvCard
-                        data={resume.data}
-                        templateId={resume.template_id || "modern-beige"}
-                        score={resume.score || 0}
-                      />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => setDeleteTarget(resume)}
-                      className="absolute top-2 right-2 w-9 h-9 rounded-full bg-surface/80 items-center justify-center"
-                    >
-                      <MaterialIcons name="delete-outline" size={20} color="#ba1a1a" />
-                    </Pressable>
-                  </View>
-                  <Pressable onPress={() => router.push(`/editor?id=${resume.id}`)}>
-                    <Text className="font-headline text-lg text-on-surface">{resume.title}</Text>
-                  </Pressable>
-                  <Text className="text-on-surface-variant font-body text-sm mt-0.5">
-                    Actualizado: {new Date(resume.updated_at).toLocaleDateString()}
-                  </Text>
-                </View>
-              ))}
-            </View>
+            <ResumeGrid
+              resumes={resumes ?? []}
+              onDelete={(id, title) => setDeleteTarget({ id, title })}
+              deleteTarget={deleteTarget}
+              setDeleteTarget={setDeleteTarget}
+              onConfirmDelete={() => {
+                if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
+                setDeleteTarget(null);
+              }}
+              onCancelDelete={() => setDeleteTarget(null)}
+              cardWidth={cardWidth}
+            />
           )}
         </View>
       </ScrollView>
-
-      <ConfirmDialog
-        visible={!!deleteTarget}
-        title="Eliminar CV"
-        message={deleteTarget ? `¿Quieres borrar "${deleteTarget.title}"?` : ""}
-        onConfirm={() => {
-          if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
-          setDeleteTarget(null);
-        }}
-        onCancel={() => setDeleteTarget(null)}
-      />
     </View>
   );
 }

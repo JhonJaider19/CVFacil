@@ -1,8 +1,7 @@
 import GlassHeader from "@/components/GlassHeader";
 import GradientButton from "@/components/GradientButton";
+import ResumeGrid from "@/components/ResumeGrid";
 import StatCard from "@/components/StatCard";
-import CvCard from "@/components/CvCard";
-import ConfirmDialog from "@/components/ConfirmDialog";
 import { useAuth } from "@/src/lib/auth-context";
 import { deleteResume, getLatestInterview, getResumes, getSuggestions } from "@/src/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +12,7 @@ import { STATUS_BAR_HEIGHT } from "@/src/lib/status-bar";
 import { MaterialIcons } from "@expo/vector-icons";
 
 export default function DashboardScreen() {
-  const { user, profile } = useAuth();
+  const { profile } = useAuth();
   const queryClient = useQueryClient();
   const { width: screenWidth } = useWindowDimensions();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
@@ -36,10 +35,6 @@ export default function DashboardScreen() {
       queryClient.invalidateQueries({ queryKey: ["resumes"] });
     },
   });
-
-  function confirmDelete(resume: { id: string; title: string }) {
-    setDeleteTarget(resume);
-  }
 
   const { data: interview } = useQuery({
     queryKey: ["latest-interview"],
@@ -146,73 +141,23 @@ export default function DashboardScreen() {
                 Cargando CVs...
               </Text>
             ) : (
-              <View className="flex-row flex-wrap" style={{ gap }}>
-                {(resumes ?? []).map((resume) => (
-                  <View key={resume.id} style={cardWidth ? { width: cardWidth } : { width: "100%" }}>
-                    <View
-                      className="rounded-xl overflow-hidden mb-4 border border-outline-variant/10 shadow-sm bg-surface-container-high"
-                      style={{ aspectRatio: 3 / 4 }}
-                    >
-                      <Pressable
-                        className="flex-1"
-                        onPress={() => router.push(`/editor?id=${resume.id}`)}
-                      >
-                        <CvCard
-                          data={resume.data}
-                          templateId={resume.template_id || "modern-beige"}
-                          score={resume.score || 0}
-                        />
-                      </Pressable>
-                      <Pressable
-                        onPress={() => confirmDelete(resume)}
-                        className="absolute top-2 right-2 w-9 h-9 rounded-full bg-surface/80 items-center justify-center"
-                      >
-                        <MaterialIcons name="delete-outline" size={20} color="#ba1a1a" />
-                      </Pressable>
-                    </View>
-                    <Pressable onPress={() => router.push(`/editor?id=${resume.id}`)}>
-                      <Text className="font-headline text-lg text-on-surface">
-                        {resume.title}
-                      </Text>
-                    </Pressable>
-                    <Text className="text-on-surface-variant font-body text-sm mt-0.5">
-                      Actualizado: {new Date(resume.updated_at).toLocaleDateString()}
-                    </Text>
-                  </View>
-                ))}
-
-                <Pressable onPress={() => router.push('/editor')}>
-                    <View
-                      className="border-2 border-dashed border-outline-variant/30 rounded-xl items-center justify-center hover:bg-surface-container-low transition-all"
-                      style={cardWidth ? { width: cardWidth, aspectRatio: 3 / 4 } : { aspectRatio: 3 / 4, width: "100%" }}
-                    >
-                      <View className="w-16 h-16 rounded-full bg-secondary-container items-center justify-center mb-4">
-                        <MaterialIcons name="add" size={28} color="#0b55cf" />
-                      </View>
-                      <Text className="font-headline text-on-surface-variant">
-                        Nueva Versión
-                      </Text>
-                      <Text className="text-on-surface-variant/60 font-body text-xs text-center mt-2 px-8">
-                        Crea una variante optimizada para un puesto específico
-                      </Text>
-                    </View>
-                  </Pressable>
-              </View>
+              <ResumeGrid
+                resumes={resumes ?? []}
+                onDelete={(id, title) => setDeleteTarget({ id, title })}
+                deleteTarget={deleteTarget}
+                setDeleteTarget={setDeleteTarget}
+                onConfirmDelete={() => {
+                  if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
+                  setDeleteTarget(null);
+                }}
+                onCancelDelete={() => setDeleteTarget(null)}
+                cardWidth={cardWidth}
+                showCreateCard
+              />
             )}
           </View>
         </View>
       </ScrollView>
-
-      <ConfirmDialog
-        visible={!!deleteTarget}
-        title="Eliminar CV"
-        message={deleteTarget ? `¿Quieres borrar "${deleteTarget.title}"?` : ""}
-        onConfirm={() => {
-          if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
-          setDeleteTarget(null);
-        }}
-        onCancel={() => setDeleteTarget(null)}
-      />
     </View>
   );
 }

@@ -10,8 +10,7 @@ import {
   getResumes,
   saveInterviewMessage,
 } from "@/src/lib/api";
-import { useAuth } from "@/src/lib/auth-context";
-import { insforge } from "@/src/lib/insforge";
+import { useCurrentUserId } from "@/src/lib/use-current-user";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
@@ -61,7 +60,6 @@ interface ChatMessage {
 }
 
 export default function AssistantScreen() {
-  const { user } = useAuth();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -83,9 +81,7 @@ export default function AssistantScreen() {
   const currentResume = resumes?.[0];
 
   async function handleSend(content?: string) {
-    console.log("[assistant] handleSend called", { content, input, aiLoading });
     const text = (content || input).trim();
-    console.log("[assistant] handleSend text", { text, isEmpty: !text, isLoading: aiLoading });
     if (!text || aiLoading) return;
     setInput("");
 
@@ -395,10 +391,7 @@ export default function AssistantScreen() {
               </Pressable>
             </View>
             <Pressable
-              onPress={() => {
-                console.log("[assistant] send-button onPress fired");
-                handleSend();
-              }}
+              onPress={() => handleSend()}
               disabled={aiLoading}
               hitSlop={20}
               style={{ opacity: aiLoading ? 0.5 : 1 }}
@@ -428,7 +421,7 @@ function InterviewMode({
   resumeData: any;
   resumeId?: string;
 }) {
-  const { user } = useAuth();
+  const getUserId = useCurrentUserId();
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");
   const [isInterviewInputFocused, setIsInterviewInputFocused] = useState(false);
@@ -444,15 +437,7 @@ function InterviewMode({
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      let userId: string | undefined = user?.id;
-      if (!userId) {
-        try {
-          const { data: authData } = await insforge.auth.getCurrentUser();
-          userId = authData?.user?.id;
-        } catch {
-          // fall through; handled below
-        }
-      }
+      const userId = await getUserId();
       if (cancelled) return;
       if (!userId) {
         setInterviewMessages([
@@ -503,7 +488,7 @@ function InterviewMode({
     return () => {
       cancelled = true;
     };
-  }, [user?.id, resumeId]);
+  }, [getUserId, resumeId]);
 
   function startTimer() {
     if (timerRef.current) return;
@@ -517,9 +502,7 @@ function InterviewMode({
   }
 
   async function handleSendInterview() {
-    console.log("[assistant] handleSendInterview called", { input, loading, interviewId, bootstrapping });
     const text = input.trim();
-    console.log("[assistant] handleSendInterview text", { text, isEmpty: !text, isLoading: loading });
     if (!text || loading || !interviewId) return;
     setInput("");
 
@@ -615,7 +598,7 @@ function InterviewMode({
             `## Feedback Final\n\n${feedbackText}`,
           );
           queryClient.invalidateQueries({
-            queryKey: ["latest-interview", user?.id],
+            queryKey: ["latest-interview"],
           });
         } catch (persistErr: any) {
           // Non-fatal: show feedback anyway
@@ -844,10 +827,7 @@ function InterviewMode({
             />
           </View>
           <Pressable
-            onPress={() => {
-              console.log("[assistant] interview send-button onPress fired");
-              handleSendInterview();
-            }}
+            onPress={handleSendInterview}
             disabled={bootstrapping || !interviewId || loading}
             hitSlop={20}
             style={{ opacity: bootstrapping || !interviewId || loading ? 0.5 : 1 }}

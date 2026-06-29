@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, PressableProps, Text, ViewProps } from "react-native";
+import { Pressable, PressableProps, Text } from "react-native";
 
 interface GradientButtonProps extends PressableProps {
   colors?: readonly [string, string];

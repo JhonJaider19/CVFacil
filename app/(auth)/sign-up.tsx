@@ -11,7 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import AuthHeader from "@/components/AuthHeader";
 
 export default function SignUpScreen() {
   const { signUp, signInWithOAuth } = useAuth();
@@ -70,34 +70,13 @@ export default function SignUpScreen() {
 
   return (
     <View className="flex-1 bg-surface">
-      {/* AI Atmospheric Pulse background */}
-      <View className="absolute top-1/4 -right-20 w-96 h-96 rounded-full"
-        style={{ backgroundColor: "rgba(163, 246, 156, 0.08)", filter: "blur(60px)" as any }}
-      />
-      <View className="absolute bottom-1/4 -left-20 w-80 h-80 rounded-full"
-        style={{ backgroundColor: "rgba(218, 226, 255, 0.08)", filter: "blur(60px)" as any }}
-      />
-
-      <SafeAreaView edges={["top"]} className="bg-surface/80">
-        <View
-          className="h-14 flex-row items-center justify-between px-6"
-          style={{ backgroundColor: "rgba(248, 249, 250, 0.8)", backdropFilter: "blur(12px)" as any }}
-        >
-          <View className="flex-row items-center gap-4">
-            <Pressable onPress={() => router.back()}>
-              <Text className="text-primary text-2xl">←</Text>
-            </Pressable>
-            <Text className="font-headline text-xl font-extrabold text-primary tracking-tighter">
-              CVFácil
-            </Text>
-          </View>
-          <Pressable onPress={() => router.push("/(auth)/sign-in" as any)}>
-            <Text className="text-primary font-bold text-sm">
-              Log in
-            </Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+      <AuthHeader onBack={() => router.back()}>
+        <Pressable onPress={() => router.push("/(auth)/sign-in" as any)}>
+          <Text className="text-primary font-bold text-sm">
+            Log in
+          </Text>
+        </Pressable>
+      </AuthHeader>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}

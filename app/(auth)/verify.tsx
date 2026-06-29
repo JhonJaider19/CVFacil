@@ -1,3 +1,4 @@
+import AuthHeader from "@/components/AuthHeader";
 import GradientButton from "@/components/GradientButton";
 import { useAuth } from "@/src/lib/auth-context";
 import { router, useLocalSearchParams } from "expo-router";
@@ -11,7 +12,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VerifyScreen() {
   const { verifyEmail, resendOtp } = useAuth();
@@ -52,21 +52,7 @@ export default function VerifyScreen() {
 
   return (
     <View className="flex-1 bg-surface">
-      <SafeAreaView edges={["top"]} className="bg-surface/80">
-        <View
-          className="h-16 flex-row items-center px-6"
-          style={{ backgroundColor: "rgba(248, 249, 250, 0.8)", backdropFilter: "blur(12px)" as any }}
-        >
-          <View className="flex-row items-center gap-2">
-            <View className="w-8 h-8 bg-primary rounded-lg items-center justify-center">
-              <Text className="text-on-primary text-sm font-bold">CV</Text>
-            </View>
-            <Text className="text-xl font-extrabold tracking-tight text-primary font-headline">
-              CVFácil
-            </Text>
-          </View>
-        </View>
-      </SafeAreaView>
+      <AuthHeader />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
