@@ -45,6 +45,20 @@ export const styles = `
     object-fit: cover;
   }
 
+  .profile-photo-initials {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: #cec2b4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40pt;
+    font-weight: bold;
+    color: #5c4d46;
+    text-transform: uppercase;
+  }
+
   .user-name {
     font-size: 20pt;
     font-weight: bold;

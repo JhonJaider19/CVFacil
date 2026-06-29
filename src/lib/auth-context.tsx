@@ -1,10 +1,11 @@
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   type ReactNode,
 } from "react";
 import { Platform } from "react-native";
@@ -17,6 +18,7 @@ const OAUTH_VERIFIER_FILE = `${FileSystem.cacheDirectory ?? ""}cvfacil-oauth-ver
 interface AuthUser {
   id: string;
   email: string;
+  avatarUrl: string | null;
 }
 
 interface AuthContextType {
@@ -44,9 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       const { data, error } = await insforge.auth.getCurrentUser();
       if (error || !data?.user) return null;
-      return { id: data.user.id, email: data.user.email ?? "" };
+      const avatarUrl: string | null = data.user.profile?.avatar_url ?? null;
+      return { id: data.user.id, email: data.user.email ?? "", avatarUrl };
     },
-    enabled: false,
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     retry: false,
   });
 
@@ -57,7 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryFn: async () => {
         const { data, error } = await insforge.auth.getCurrentUser();
         if (error || !data?.user) return null;
-        return { id: data.user.id, email: data.user.email ?? "" };
+        const avatarUrl: string | null = data.user.profile?.avatar_url ?? null;
+        return { id: data.user.id, email: data.user.email ?? "", avatarUrl };
       },
     });
   }, [queryClient]);
@@ -76,6 +82,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     enabled: !!user,
   });
+
+  const syncAvatarMutation = useMutation({
+    mutationFn: async (avatarUrl: string) => {
+      if (!user) return;
+      await insforge.auth.setProfile({ avatar_url: avatarUrl });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+    },
+  });
+
+  useEffect(() => {
+    if (user?.avatarUrl && profile && !profile.avatar_url) {
+      syncAvatarMutation.mutate(user.avatarUrl);
+    }
+  }, [user?.avatarUrl, profile?.avatar_url]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {

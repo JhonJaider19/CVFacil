@@ -1,4 +1,4 @@
-import { styles } from "./styles";
+import { styles } from "./style";
 
 export const generateElegantDark = (data) => {
   const nombreCompleto = data.nombreCompleto || "ALEJANDRO MENDOZA";

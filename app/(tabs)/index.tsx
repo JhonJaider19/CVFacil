@@ -6,9 +6,9 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { useAuth } from "@/src/lib/auth-context";
 import { deleteResume, getLatestInterview, getResumes, getSuggestions } from "@/src/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
-import { Image, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { STATUS_BAR_HEIGHT } from "@/src/lib/status-bar";
 import { MaterialIcons } from "@expo/vector-icons";
 
@@ -23,15 +23,17 @@ export default function DashboardScreen() {
   const cardWidth = screenWidth >= 640 ? (screenWidth - 48 - gap * (numColumns - 1)) / numColumns : undefined;
 
   const { data: resumes, isLoading: resumesLoading } = useQuery({
-    queryKey: ["resumes", user?.id],
-    queryFn: () => getResumes(user!.id),
-    enabled: !!user,
+    queryKey: ["resumes"],
+    queryFn: () => getResumes(),
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteResume(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["resumes", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["resumes"] });
     },
   });
 
@@ -40,9 +42,8 @@ export default function DashboardScreen() {
   }
 
   const { data: interview } = useQuery({
-    queryKey: ["latest-interview", user?.id],
-    queryFn: () => getLatestInterview(user!.id),
-    enabled: !!user,
+    queryKey: ["latest-interview"],
+    queryFn: () => getLatestInterview(),
   });
 
   const firstResumeId = resumes?.[0]?.id;
@@ -58,26 +59,10 @@ export default function DashboardScreen() {
   const resumeCount = resumes?.length ?? 0;
   const bestScore = resumes?.reduce((max, r) => Math.max(max, r.score || 0), 0) ?? 65;
   const profileScore = Math.max(bestScore, 65);
-  const avatarUri = profile?.avatar_url || undefined;
 
   return (
     <View className="flex-1 bg-surface">
-      <GlassHeader>
-        <View className="flex-row items-center gap-4">
-          <Pressable className="p-1 hover:bg-surface-container-low rounded-lg">
-            <MaterialIcons name="notifications-none" size={24} color="#525f73" />
-          </Pressable>
-          <View className="w-8 h-8 rounded-full bg-secondary-container items-center justify-center overflow-hidden border border-outline-variant/15">
-            {avatarUri ? (
-              <Image source={{ uri: avatarUri }} className="w-full h-full object-cover" />
-            ) : (
-              <Text className="text-xs font-body-bold text-secondary">
-                {name.charAt(0).toUpperCase()}
-              </Text>
-            )}
-          </View>
-        </View>
-      </GlassHeader>
+      <GlassHeader />
 
       <ScrollView
         className="flex-1"
@@ -96,12 +81,10 @@ export default function DashboardScreen() {
                   hoy.
                 </Text>
               </View>
-              <Link href="/editor" asChild>
-                <GradientButton>
+              <GradientButton onPress={() => router.push("/editor")}>
                   <MaterialIcons name="add-circle" size={20} color="#ffffff" />
                   <Text className="text-white text-lg font-headline">Crear nuevo CV</Text>
                 </GradientButton>
-              </Link>
             </View>
           </View>
 
@@ -112,9 +95,9 @@ export default function DashboardScreen() {
                 icon="🧠"
                 iconBg="bg-tertiary-fixed"
                 value={String(simScore)}
-                subtitle="/10"
+                subtitle="/100"
                 trend={
-                  simScore >= 7
+                  simScore >= 70
                     ? "¡Excelente preparación!"
                     : "Sigue practicando"
                 }
@@ -122,7 +105,11 @@ export default function DashboardScreen() {
             </View>
 
             {aiSuggestion && (
-              <View className="w-full sm:flex-1 min-w-[280px] bg-tertiary-fixed/30 p-6 rounded-xl border border-tertiary-container/10 relative overflow-hidden">
+              <Pressable
+                onPress={() => firstResumeId && router.push(`/editor?id=${firstResumeId}`)}
+                disabled={!firstResumeId}
+                className="w-full sm:flex-1 min-w-[280px] bg-tertiary-fixed/30 p-6 rounded-xl border border-tertiary-container/10 relative overflow-hidden active:opacity-80"
+              >
                 <View className="flex-row items-center gap-2 mb-3">
                   <MaterialIcons name="auto-awesome" size={18} color="#1a6c23" />
                   <Text className="text-on-tertiary-fixed font-headline text-sm uppercase tracking-wider">
@@ -138,7 +125,7 @@ export default function DashboardScreen() {
                   </Text>
                   <MaterialIcons name="arrow-forward" size={14} color="#1a6c23" />
                 </View>
-              </View>
+              </Pressable>
             )}
           </View>
 
@@ -147,7 +134,7 @@ export default function DashboardScreen() {
               <Text className="font-headline text-2xl text-on-surface">
                 Mis Currículums
               </Text>
-              <Pressable>
+              <Pressable onPress={() => router.push("/resumes" as any)}>
                 <Text className="text-primary font-body-bold text-sm">
                   Ver todos
                 </Text>
@@ -172,7 +159,7 @@ export default function DashboardScreen() {
                       >
                         <CvCard
                           data={resume.data}
-                          templateId={resume.template_id || "moderno"}
+                          templateId={resume.template_id || "modern-beige"}
                           score={resume.score || 0}
                         />
                       </Pressable>
@@ -194,8 +181,7 @@ export default function DashboardScreen() {
                   </View>
                 ))}
 
-                <Link href="/editor" asChild>
-                  <Pressable>
+                <Pressable onPress={() => router.push('/editor')}>
                     <View
                       className="border-2 border-dashed border-outline-variant/30 rounded-xl items-center justify-center hover:bg-surface-container-low transition-all"
                       style={cardWidth ? { width: cardWidth, aspectRatio: 3 / 4 } : { aspectRatio: 3 / 4, width: "100%" }}
@@ -211,7 +197,6 @@ export default function DashboardScreen() {
                       </Text>
                     </View>
                   </Pressable>
-                </Link>
               </View>
             )}
           </View>

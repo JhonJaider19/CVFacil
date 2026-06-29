@@ -3,6 +3,7 @@ import { View, Text } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { buildPdfHtml } from "@/src/lib/pdf-html";
 import type { ResumeData } from "@/src/lib/types";
+import { normalizeResumeData } from "@/src/lib/types";
 
 interface CvCardProps {
   data: ResumeData;
@@ -13,7 +14,9 @@ interface CvCardProps {
 const SCALE = 0.23;
 
 export default function CvCard({ data, templateId, score }: CvCardProps) {
-  if (!data?.fullName && !data?.title) {
+  const d = normalizeResumeData(data);
+
+  if (!d.nombre && !d.apellido && !d.profesion) {
     return (
       <View className="items-center justify-center flex-1 p-6">
         <MaterialIcons name="description" size={48} color="#bac7de" />
@@ -24,7 +27,7 @@ export default function CvCard({ data, templateId, score }: CvCardProps) {
     );
   }
 
-  const html = buildPdfHtml(data, templateId);
+  const html = buildPdfHtml(d, templateId);
 
   return (
     <View className="flex-1 overflow-hidden bg-white" style={{ borderRadius: 4 }}>

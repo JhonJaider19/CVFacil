@@ -1,4 +1,4 @@
-import { styles } from "./styles";
+import { styles } from "./style";
 
 export const generateModernBeige = (data) => {
   // Manejo de Placeholders para evitar espacios vacíos en la vista previa
@@ -7,7 +7,8 @@ export const generateModernBeige = (data) => {
   const perfil =
     data.perfil ||
     "Abogada con más de cinco años de experiencia en derecho laboral, especializada en la negociación de contratos colectivos y la resolución de disputas laborales...";
-  const fotoUri = data.fotoUri || "https://via.placeholder.com/150";
+  const fotoUri = data.fotoUri;
+  const iniciales = (nombre.charAt(0) + apellido.charAt(0)).trim() || "?";
 
   return `
     <!DOCTYPE html>
@@ -23,7 +24,10 @@ export const generateModernBeige = (data) => {
         <!-- BARRA LATERAL IZQUIERDA -->
         <div class="sidebar">
           <div class="profile-photo-container">
-            <img class="profile-photo" src="${fotoUri}" alt="Foto de perfil" />
+            ${fotoUri
+              ? `<img class="profile-photo" src="${fotoUri}" alt="Foto de perfil" />`
+              : `<div class="profile-photo-initials">${iniciales}</div>`
+            }
           </div>
           
           <div class="user-name">

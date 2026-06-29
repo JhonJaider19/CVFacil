@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import type { ResumeData } from "@/src/lib/types";
+import { normalizeResumeData } from "@/src/lib/types";
 
 interface CvCardProps {
   data: ResumeData;
@@ -10,7 +11,9 @@ interface CvCardProps {
 }
 
 export default React.memo(function CvCard({ data, score }: CvCardProps) {
-  if (!data?.fullName && !data?.title) {
+  const d = normalizeResumeData(data);
+
+  if (!d.nombre && !d.apellido && !d.profesion) {
     return (
       <View className="items-center justify-center flex-1 p-6">
         <MaterialIcons name="description" size={48} color="#bac7de" />
@@ -21,6 +24,8 @@ export default React.memo(function CvCard({ data, score }: CvCardProps) {
     );
   }
 
+  const nombreCompleto = `${d.nombre} ${d.apellido}`.trim() || "Nombre Completo";
+
   return (
     <View className="flex-1 bg-white p-5 rounded-sm">
       <View className="border-b-2 border-primary/10 pb-3 mb-4">
@@ -28,16 +33,16 @@ export default React.memo(function CvCard({ data, score }: CvCardProps) {
           className="font-headline-bold text-base text-[#191c1d]"
           numberOfLines={1}
         >
-          {data.fullName || "Nombre Completo"}
+          {nombreCompleto}
         </Text>
         <Text className="text-[10px] font-body-medium text-[#0b55cf]" numberOfLines={1}>
-          {data.title || ""}
+          {d.profesion || ""}
         </Text>
       </View>
 
-      {data.summary ? (
+      {d.resumen ? (
         <Text className="text-[9px] text-[#3f4447] font-body leading-relaxed mb-3" numberOfLines={3}>
-          {data.summary}
+          {d.resumen}
         </Text>
       ) : null}
 

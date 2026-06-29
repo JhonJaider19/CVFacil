@@ -4,7 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 
 const tabIcons: Record<string, { icon: string; label: string }> = {
   index: { icon: "dashboard", label: "Inicio" },
-  editor: { icon: "description", label: "Mis CVs" },
+  resumes: { icon: "folder", label: "Mis CVs" },
   templates: { icon: "style", label: "Plantillas" },
   assistant: { icon: "chat-bubble", label: "Entrevista" },
 };

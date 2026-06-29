@@ -6,6 +6,13 @@ import * as FileSystem from "expo-file-system/legacy";
 import { insforge } from "@/src/lib/insforge";
 
 const OAUTH_VERIFIER_FILE = `${FileSystem.cacheDirectory ?? ""}cvfacil-oauth-verifier.json`;
+const VERIFIER_MAX_AGE_MS = 5 * 60 * 1000;
+
+interface VerifierRecord {
+  codeVerifier?: string;
+  provider?: string;
+  createdAt?: number;
+}
 
 export default function OAuthCallbackScreen() {
   const params = useLocalSearchParams<{
@@ -32,6 +39,7 @@ export default function OAuthCallbackScreen() {
       try {
         const { data: currentUserData } = await insforge.auth.getCurrentUser();
         if (currentUserData?.user) {
+          await FileSystem.deleteAsync(OAUTH_VERIFIER_FILE, { idempotent: true }).catch(() => {});
           router.replace("/(tabs)" as any);
           return;
         }
@@ -40,6 +48,7 @@ export default function OAuthCallbackScreen() {
       }
 
       if (status === "error" || errorMessage) {
+        await FileSystem.deleteAsync(OAUTH_VERIFIER_FILE, { idempotent: true }).catch(() => {});
         router.replace(
           `/(auth)/sign-in?error=${encodeURIComponent(errorMessage || "Error en autenticación OAuth")}` as any,
         );
@@ -47,15 +56,15 @@ export default function OAuthCallbackScreen() {
       }
 
       if (!code) {
+        await FileSystem.deleteAsync(OAUTH_VERIFIER_FILE, { idempotent: true }).catch(() => {});
         router.replace("/(auth)/sign-in?error=No se recibió código de autenticación" as any);
         return;
       }
 
-      let codeVerifier: string | undefined;
+      let verifierRecord: VerifierRecord | null = null;
       try {
         const raw = await FileSystem.readAsStringAsync(OAUTH_VERIFIER_FILE);
-        const parsed = JSON.parse(raw) as { codeVerifier?: string };
-        codeVerifier = parsed.codeVerifier;
+        verifierRecord = JSON.parse(raw) as VerifierRecord;
       } catch {
         // verifier file missing; try generic exchange without it
       }
@@ -66,9 +75,18 @@ export default function OAuthCallbackScreen() {
         // ignore
       }
 
+      const codeVerifier = verifierRecord?.codeVerifier;
       if (!codeVerifier) {
         router.replace(
           "/(auth)/sign-in?error=Sesión OAuth expirada, intenta de nuevo" as any,
+        );
+        return;
+      }
+
+      const createdAt = verifierRecord?.createdAt ?? 0;
+      if (createdAt && Date.now() - createdAt > VERIFIER_MAX_AGE_MS) {
+        router.replace(
+          "/(auth)/sign-in?error=El código de verificación expiró, intenta de nuevo" as any,
         );
         return;
       }

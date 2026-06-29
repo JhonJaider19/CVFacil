@@ -2,14 +2,20 @@ import GlassHeader from "@/components/GlassHeader";
 import {
   chatCompletion,
   generateCvSuggestion,
-  generateInterviewQuestion
+  generateInterviewQuestion,
 } from "@/src/lib/ai-service";
-import { getResumes } from "@/src/lib/api";
+import {
+  completeInterview,
+  createInterview,
+  getResumes,
+  saveInterviewMessage,
+} from "@/src/lib/api";
 import { useAuth } from "@/src/lib/auth-context";
+import { insforge } from "@/src/lib/insforge";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -67,9 +73,8 @@ export default function AssistantScreen() {
   const [isInputFocused, setIsInputFocused] = useState(false);
 
   const { data: resumes } = useQuery({
-    queryKey: ["resumes", user?.id],
-    queryFn: () => getResumes(user!.id),
-    enabled: !!user,
+    queryKey: ["resumes"],
+    queryFn: () => getResumes(),
   });
 
   const currentResume = resumes?.[0];
@@ -226,17 +231,7 @@ export default function AssistantScreen() {
 
   return (
     <View className="flex-1 bg-surface">
-      <GlassHeader>
-        <View className="flex-row items-center gap-4">
-          <Pressable className="p-1 hover:bg-surface-container-low rounded-lg">
-            <MaterialIcons
-              name="notifications-none"
-              size={24}
-              color="#525f73"
-            />
-          </Pressable>
-        </View>
-      </GlassHeader>
+      <GlassHeader />
 
       <ScrollView
         className="flex-1"
@@ -400,22 +395,81 @@ function InterviewMode({
   resumeData: any;
   resumeId?: string;
 }) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [input, setInput] = useState("");
   const [isInterviewInputFocused, setIsInterviewInputFocused] = useState(false);
-  const [interviewMessages, setInterviewMessages] = useState<ChatMessage[]>([
-    {
-      id: "init",
-      type: "ai",
-      text: "Bienvenido a la simulación de entrevista. Voy a hacerte preguntas como un reclutador real. Responde con naturalidad. Cuéntame, ¿por qué decidiste postularte a esta posición?",
-      time: "Ahora",
-    },
-  ]);
+  const [interviewId, setInterviewId] = useState<string | null>(null);
+  const [interviewMessages, setInterviewMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [score, setScore] = useState(0);
   const [timer, setTimer] = useState(0);
+  const [bootstrapping, setBootstrapping] = useState(true);
   const timerRef = useRef<any>(null);
+  const transcriptRef = useRef<{ role: "ai" | "user"; content: string }[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      let userId: string | undefined = user?.id;
+      if (!userId) {
+        try {
+          const { data: authData } = await insforge.auth.getCurrentUser();
+          userId = authData?.user?.id;
+        } catch {
+          // fall through; handled below
+        }
+      }
+      if (cancelled) return;
+      if (!userId) {
+        setInterviewMessages([
+          {
+            id: "auth-err",
+            type: "ai",
+            text: "No hay sesión activa. Cierra y vuelve a iniciar sesión para usar el simulador.",
+            time: "Ahora",
+          },
+        ]);
+        setBootstrapping(false);
+        return;
+      }
+      try {
+        const interview = await createInterview({ userId, resumeId });
+        if (cancelled) return;
+        setInterviewId(interview.id);
+
+        const intro =
+          "Bienvenido a la simulación de entrevista. Voy a hacerte preguntas como un reclutador real. Responde con naturalidad. Cuéntame, ¿por qué decidiste postularte a esta posición?";
+        const aiMsg: ChatMessage = {
+          id: "init",
+          type: "ai",
+          text: intro,
+          time: "Ahora",
+        };
+        setInterviewMessages([aiMsg]);
+        transcriptRef.current = [{ role: "ai", content: intro }];
+        await saveInterviewMessage(interview.id, "ai", intro);
+      } catch (e: any) {
+        if (cancelled) return;
+        setInterviewMessages([
+          {
+            id: "err",
+            type: "ai",
+            text: `Error iniciando entrevista: ${e.message}`,
+            time: "Ahora",
+          },
+        ]);
+      } finally {
+        if (!cancelled) setBootstrapping(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, resumeId]);
 
   function startTimer() {
+    if (timerRef.current) return;
     timerRef.current = setInterval(() => setTimer((t) => t + 1), 1000);
   }
 
@@ -427,7 +481,7 @@ function InterviewMode({
 
   async function handleSendInterview() {
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || loading || !interviewId) return;
     setInput("");
 
     const userMsg: ChatMessage = {
@@ -437,6 +491,7 @@ function InterviewMode({
       time: "Enviado",
     };
     setInterviewMessages((prev) => [...prev, userMsg]);
+    transcriptRef.current.push({ role: "user", content: text });
     setLoading(true);
 
     if (!timerRef.current) startTimer();
@@ -447,10 +502,6 @@ function InterviewMode({
         response?.choices?.[0]?.message?.content ||
         "Gracias por tu respuesta. Cuéntame más sobre tu experiencia.";
 
-      const followUpScore =
-        text.length > 50 ? Math.min(score + 5, 100) : Math.min(score + 2, 100);
-      setScore(followUpScore);
-
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: "ai",
@@ -458,6 +509,12 @@ function InterviewMode({
         time: "Ahora",
       };
       setInterviewMessages((prev) => [...prev, aiMsg]);
+      transcriptRef.current.push({ role: "ai", content: reply });
+
+      await Promise.all([
+        saveInterviewMessage(interviewId, "user", text),
+        saveInterviewMessage(interviewId, "ai", reply),
+      ]);
     } catch (e: any) {
       const errMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -477,7 +534,14 @@ function InterviewMode({
 
     try {
       const formattedTimer = formatTime(timer);
-      const summaryPrompt = `La entrevista duró ${formattedTimer} y se hicieron ${interviewMessages.length - 1} preguntas. Genera un feedback profesional detallado con: fortalezas mostradas, áreas de mejora, puntuación final y recomendaciones. Responde en español.`;
+      const questionCount = Math.max(
+        0,
+        transcriptRef.current.filter((m) => m.role === "ai").length - 1,
+      );
+      const transcriptText = transcriptRef.current
+        .map((m) => `${m.role === "ai" ? "Reclutador" : "Candidato"}: ${m.content}`)
+        .join("\n");
+      const summaryPrompt = `La entrevista duró ${formattedTimer} y se hicieron ${questionCount} preguntas. Transcripción completa:\n${transcriptText}\n\nDevuelve PRIMERO una línea con el formato exacto "SCORE: X" donde X es una puntuación entera de 0 a 100 que refleje el desempeño general del candidato (comunicación, profundidad técnica, uso de ejemplos, claridad). Después del SCORE, escribe en español el feedback profesional detallado con: fortalezas mostradas, áreas de mejora, puntuación final y recomendaciones.`;
 
       const response = await chatCompletion([
         {
@@ -487,15 +551,45 @@ function InterviewMode({
         },
         { role: "user", content: summaryPrompt },
       ]);
-      const feedback =
+      const raw =
         response?.choices?.[0]?.message?.content ||
         "Gracias por participar en la simulación.";
+
+      const scoreMatch = raw.match(/SCORE:\s*(\d{1,3})/i);
+      const finalScore = scoreMatch
+        ? Math.max(0, Math.min(100, parseInt(scoreMatch[1], 10)))
+        : 0;
+      const feedbackText = raw.replace(/SCORE:\s*\d{1,3}\s*\n?/i, "").trim();
+
+      setScore(finalScore);
+
+      if (interviewId) {
+        try {
+          await completeInterview({
+            interviewId,
+            score: finalScore,
+            durationSeconds: timer,
+          });
+          await saveInterviewMessage(
+            interviewId,
+            "ai",
+            `## Feedback Final\n\n${feedbackText}`,
+          );
+          queryClient.invalidateQueries({
+            queryKey: ["latest-interview", user?.id],
+          });
+        } catch (persistErr: any) {
+          // Non-fatal: show feedback anyway
+          console.warn("No se pudo persistir el resultado:", persistErr);
+        }
+      }
+
       setInterviewMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
           type: "ai",
-          text: `## Feedback Final\n\n${feedback}`,
+          text: `## Feedback Final\n\n${feedbackText}`,
           time: "Ahora",
         },
       ]);
@@ -635,11 +729,12 @@ function InterviewMode({
             <View className="flex-1">
               <TextInput
                 className="bg-surface-container-lowest text-on-surface font-body text-base rounded-xl px-4 py-4 border"
-                placeholder="Escribe tu respuesta..."
+                placeholder={bootstrapping ? "Preparando entrevista..." : "Escribe tu respuesta..."}
                 placeholderTextColor="#727785"
                 value={input}
                 onChangeText={setInput}
                 multiline
+                editable={!bootstrapping && !!interviewId}
                 onFocus={() => setIsInterviewInputFocused(true)}
                 onBlur={() => setIsInterviewInputFocused(false)}
                 style={{
@@ -650,19 +745,35 @@ function InterviewMode({
                 onSubmitEditing={handleSendInterview}
               />
             </View>
-            <Pressable onPress={handleSendInterview}>
+            <Pressable onPress={handleSendInterview} disabled={bootstrapping || !interviewId}>
               <LinearGradient
                 colors={["#0b55cf", "#3870ea"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 className="w-14 h-14 rounded-xl items-center justify-center shadow-md shadow-primary/20 active:scale-95 transition-all"
+                style={{ opacity: bootstrapping || !interviewId ? 0.5 : 1 }}
               >
-                <MaterialIcons name="arrow-upward" size={24} color="#ffffff" />
+                {bootstrapping ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <MaterialIcons name="arrow-upward" size={24} color="#ffffff" />
+                )}
               </LinearGradient>
             </Pressable>
           </View>
 
-          <Pressable className="flex-row items-center justify-center gap-2 py-3 mb-8 hover:bg-surface-container-low rounded-lg transition-colors">
+          <Pressable
+            className="flex-row items-center justify-center gap-2 py-3 mb-8 hover:bg-surface-container-low rounded-lg transition-colors"
+            onPress={() => {
+              const helpMsg: ChatMessage = {
+                id: Date.now().toString(),
+                type: "ai",
+                text: "💡 **Consejo**: Usa el método STAR para estructurar tus respuestas:\n\n**S**ituación — Describe el contexto\n**T**area — Explica tu responsabilidad\n**A**cción — Detalla lo que hiciste\n**R**esultado — Muestra el impacto con datos\n\nEjemplo: \"En mi anterior trabajo (Situación), lideré la migración a la nube (Tarea), coordinando 5 equipos y rediseñando la arquitectura (Acción), logrando un 40% de reducción de costos (Resultado).\"",
+                time: "Ahora",
+              };
+              setInterviewMessages((prev) => [...prev, helpMsg]);
+            }}
+          >
             <MaterialIcons name="lightbulb" size={18} color="#0b55cf" />
             <Text className="text-primary font-body-bold text-sm">
               Ayuda de IA
@@ -670,12 +781,13 @@ function InterviewMode({
           </Pressable>
 
           <View className="flex-row justify-center">
-            <Pressable onPress={handleFinish}>
+            <Pressable onPress={handleFinish} disabled={bootstrapping || !interviewId}>
               <LinearGradient
                 colors={["#ba1a1a", "#e03b3b"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 className="px-6 py-3 rounded-xl shadow-md shadow-error/20 active:scale-95 transition-all flex-row items-center gap-2"
+                style={{ opacity: bootstrapping || !interviewId ? 0.5 : 1 }}
               >
                 <MaterialIcons name="assessment" size={18} color="#ffffff" />
                 <Text className="text-white font-headline-semibold text-sm">

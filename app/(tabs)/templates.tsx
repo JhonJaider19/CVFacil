@@ -1,33 +1,62 @@
 import GlassHeader from "@/components/GlassHeader";
 import GradientButton from "@/components/GradientButton";
 import { useAuth } from "@/src/lib/auth-context";
-import { getResumes, getTemplates, updateResumeTemplate } from "@/src/lib/api";
+import { getResume, getResumes, updateResumeTemplate } from "@/src/lib/api";
 import { buildPdfHtml } from "@/src/lib/pdf-html";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View, Alert } from "react-native";
 import { STATUS_BAR_HEIGHT } from "@/src/lib/status-bar";
 import { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { normalizeResumeData } from "@/src/lib/types";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
+
+const TEMPLATES = [
+  {
+    id: "modern-beige",
+    name: "Modern Beige",
+    description: "Elegancia con tonos beige y foto de perfil",
+    sidebarColor: "#f5f0eb",
+    accentColor: "#8c6d58",
+  },
+  {
+    id: "classic-ats",
+    name: "Classic ATS",
+    description: "Optimizado para sistemas de selección ATS",
+    sidebarColor: "#ffffff",
+    accentColor: "#000000",
+  },
+  {
+    id: "elegant-dark",
+    name: "Elegant Dark",
+    description: "Estilo oscuro profesional con acentos dorados",
+    sidebarColor: "#1a1a1a",
+    accentColor: "#d4af37",
+  },
+];
 
 export default function TemplatesScreen() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("moderno");
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const [selectedTemplate, setSelectedTemplate] = useState("modern-beige");
 
-  const { data: templates } = useQuery({
-    queryKey: ["templates"],
-    queryFn: getTemplates,
+  const { data: previewResume } = useQuery({
+    queryKey: ["resume", id],
+    queryFn: () => getResume(id!),
+    enabled: !!id,
   });
 
   const { data: resumes } = useQuery({
-    queryKey: ["resumes", user?.id],
-    queryFn: () => getResumes(user!.id),
-    enabled: !!user,
+    queryKey: ["resumes"],
+    queryFn: () => getResumes(),
+    enabled: !id,
   });
 
-  const currentResume = resumes?.[0];
+  const currentResume = previewResume ?? resumes?.[0];
 
   const updateMutation = useMutation({
     mutationFn: (templateId: string) => {
@@ -35,9 +64,27 @@ export default function TemplatesScreen() {
       return updateResumeTemplate(currentResume.id, templateId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["resumes", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["resumes"] });
+    },
+    onError: (e: any) => {
+      Alert.alert(
+        "No se pudo cambiar la plantilla",
+        e?.message || "Crea un CV antes de seleccionar una plantilla.",
+      );
     },
   });
+
+  function handleSelectTemplate(templateId: string) {
+    setSelectedTemplate(templateId);
+    if (!currentResume) {
+      Alert.alert(
+        "Aún no tienes un CV",
+        "Crea primero un currículum desde el editor para poder aplicarle una plantilla.",
+      );
+      return;
+    }
+    updateMutation.mutate(templateId);
+  }
 
   const [pdfLoading, setPdfLoading] = useState(false);
 
@@ -45,7 +92,8 @@ export default function TemplatesScreen() {
     if (!currentResume) return;
     setPdfLoading(true);
     try {
-      const html = buildPdfHtml(currentResume.data, selectedTemplate);
+      const data = normalizeResumeData(currentResume.data);
+      const html = buildPdfHtml(data, selectedTemplate);
       const { uri } = await Print.printToFileAsync({ html });
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, { mimeType: "application/pdf" });
@@ -57,22 +105,12 @@ export default function TemplatesScreen() {
     }
   }
 
-  const templatesList = templates ?? [
-    { id: "moderno", name: "Moderno", description: "Ideal para perfiles tech y diseño", category: "professional", thumbnail_url: null, styles: {}, is_active: true, created_at: "" },
-    { id: "clasico", name: "Clásico", description: "Para sectores corporativos y banca", category: "classic", thumbnail_url: null, styles: {}, is_active: true, created_at: "" },
-    { id: "creativo", name: "Creativo", description: "Perfecto para artes y publicidad", category: "creative", thumbnail_url: null, styles: {}, is_active: true, created_at: "" },
-    { id: "minimalista", name: "Minimalista", description: "Menos es más. Enfoque puro.", category: "professional", thumbnail_url: null, styles: {}, is_active: true, created_at: "" },
-  ];
+  const d = currentResume ? normalizeResumeData(currentResume.data) : null;
+  const nombreCompleto = d ? `${d.nombre} ${d.apellido}`.trim() : "";
 
   return (
     <View className="flex-1 bg-surface">
-      <GlassHeader>
-        <View className="flex-row items-center gap-4">
-          <Pressable className="p-1 hover:bg-surface-container-low rounded-lg">
-            <MaterialIcons name="notifications-none" size={24} color="#525f73" />
-          </Pressable>
-        </View>
-      </GlassHeader>
+      <GlassHeader />
 
       <ScrollView
         className="flex-1"
@@ -94,70 +132,70 @@ export default function TemplatesScreen() {
           </View>
 
           <View className="bg-white rounded-sm overflow-hidden p-6 mb-8 shadow-sm">
-            {currentResume?.data ? (
+            {d ? (
               <>
                 <View className="border-b-2 border-primary/10 pb-4 flex-row justify-between items-start mb-6">
                   <View>
                     <Text className="font-headline text-2xl text-on-surface">
-                      {currentResume.data.fullName || "Nombre Completo"}
+                      {nombreCompleto || "Nombre Completo"}
                     </Text>
                     <Text className="text-primary font-body-medium text-base">
-                      {currentResume.data.title || "Título Profesional"}
+                      {d.profesion || "Título Profesional"}
                     </Text>
                   </View>
                   <View className="items-end">
-                    {currentResume.data.email && <Text className="text-xs text-on-surface-variant font-body">{currentResume.data.email}</Text>}
-                    {currentResume.data.phone && <Text className="text-xs text-on-surface-variant font-body">{currentResume.data.phone}</Text>}
-                    {currentResume.data.location && <Text className="text-xs text-on-surface-variant font-body">{currentResume.data.location}</Text>}
+                    {d.correo && <Text className="text-xs text-on-surface-variant font-body">{d.correo}</Text>}
+                    {d.telefono && <Text className="text-xs text-on-surface-variant font-body">{d.telefono}</Text>}
+                    {d.ubicacion && <Text className="text-xs text-on-surface-variant font-body">{d.ubicacion}</Text>}
                   </View>
                 </View>
 
                 <View className="gap-4 mb-6">
-                  {currentResume.data.summary && (
+                  {d.resumen && (
                     <View className="gap-2">
                       <Text className="text-[10px] font-body-bold tracking-widest text-primary uppercase">Perfil Profesional</Text>
-                      <Text className="text-sm text-on-surface-variant font-body leading-relaxed">{currentResume.data.summary}</Text>
+                      <Text className="text-sm text-on-surface-variant font-body leading-relaxed">{d.resumen}</Text>
                     </View>
                   )}
 
-                  {(currentResume.data.experience?.filter(e => e.position || e.company).length ?? 0) > 0 && (
+                  {d.experiencias.length > 0 && (
                     <View className="gap-2">
                       <Text className="text-[10px] font-body-bold tracking-widest text-primary uppercase">Experiencia Laboral</Text>
-                      {currentResume.data.experience!.filter(e => e.position || e.company).map((exp, i) => (
+                      {d.experiencias.map((exp, i) => (
                         <View key={i} className="gap-1 mb-2">
                           <View className="flex-row justify-between items-baseline">
-                            <Text className="font-headline-semibold text-sm text-on-surface">{exp.position}</Text>
-                            <Text className="text-[10px] text-on-surface-variant italic font-body">
-                              {exp.startDate}{exp.endDate ? ` — ${exp.endDate}` : ""}
-                            </Text>
+                            <Text className="font-headline-semibold text-sm text-on-surface">{exp.puesto}</Text>
+                            <Text className="text-[10px] text-on-surface-variant italic font-body">{exp.fechas}</Text>
                           </View>
-                          <Text className="text-xs font-body-medium text-on-surface-variant">{exp.company}</Text>
-                          {exp.description ? <Text className="text-xs text-on-surface-variant font-body mt-1">{exp.description}</Text> : null}
+                          <Text className="text-xs font-body-medium text-on-surface-variant">{exp.empresa}</Text>
+                          {exp.logros.length > 0 ? (
+                            exp.logros.map((l, li) => (
+                              <Text key={li} className="text-xs text-on-surface-variant font-body mt-1">• {l}</Text>
+                            ))
+                          ) : null}
                         </View>
                       ))}
                     </View>
                   )}
 
-                  {(currentResume.data.education?.filter(e => e.degree || e.institution).length ?? 0) > 0 && (
+                  {d.educacion.length > 0 && (
                     <View className="gap-2">
                       <Text className="text-[10px] font-body-bold tracking-widest text-primary uppercase">Educación</Text>
-                      {currentResume.data.education!.filter(e => e.degree || e.institution).map((edu, i) => (
+                      {d.educacion.map((edu, i) => (
                         <View key={i} className="flex-row justify-between items-baseline mb-1">
                           <View>
-                            <Text className="font-headline-semibold text-sm text-on-surface">{edu.degree}</Text>
-                            <Text className="text-xs text-on-surface-variant font-body">{edu.institution}</Text>
+                            <Text className="font-headline-semibold text-sm text-on-surface">{edu.titulo}</Text>
+                            <Text className="text-xs text-on-surface-variant font-body">{edu.institucion}</Text>
                           </View>
-                          <Text className="text-[10px] text-on-surface-variant italic font-body">
-                            {edu.startDate}{edu.endDate ? ` — ${edu.endDate}` : ""}
-                          </Text>
+                          <Text className="text-[10px] text-on-surface-variant italic font-body">{edu.fechas}</Text>
                         </View>
                       ))}
                     </View>
                   )}
 
-                  {(currentResume.data.skills?.length ?? 0) > 0 && (
+                  {d.habilidades.length > 0 && (
                     <View className="flex-row flex-wrap gap-1">
-                      {currentResume.data.skills!.map((s, i) => (
+                      {d.habilidades.map((s, i) => (
                         <View key={i} className="bg-secondary-container px-2 py-0.5 rounded-full">
                           <Text className="text-[10px] font-body-bold text-secondary">{s}</Text>
                         </View>
@@ -169,90 +207,150 @@ export default function TemplatesScreen() {
                 <View className="bg-tertiary-fixed self-start px-3 py-1.5 rounded-full flex-row items-center gap-2">
                   <MaterialIcons name="auto-fix-high" size={14} color="#002204" />
                   <Text className="text-[10px] font-body-bold text-on-tertiary-fixed">
-                    CV Optimizado al {currentResume.score}%
+                    CV Optimizado al {currentResume?.score ?? 0}%
                   </Text>
                 </View>
               </>
             ) : (
               <View className="items-center py-12">
                 <MaterialIcons name="description" size={48} color="#bac7de" />
-                <Text className="text-on-surface-variant font-body mt-4">Crea un CV en el editor primero</Text>
+                <Text className="text-on-surface-variant font-body mt-4">Aún no tienes un CV</Text>
+                <GradientButton className="mt-6" onPress={() => router.push("/editor" as any)}>
+                  <MaterialIcons name="add-circle" size={20} color="#ffffff" />
+                  <Text className="text-white text-lg font-headline">Crear mi primer CV</Text>
+                </GradientButton>
               </View>
             )}
           </View>
 
           {/* Download */}
-          <View className="bg-surface-container-low p-6 rounded-3xl mb-6">
-            <Text className="font-headline text-xl text-on-surface mb-1">¿Todo listo?</Text>
-            <Text className="text-on-surface-variant font-body text-sm leading-relaxed mt-1 mb-4">
-              Tu CV está optimizado para sistemas ATS. Puedes descargarlo en PDF de alta calidad.
-            </Text>
-            <GradientButton onPress={handleDownloadPdf} disabled={!currentResume || pdfLoading}>
-              <View className="flex-row items-center justify-center gap-2">
-                <MaterialIcons name="file-download" size={20} color="#ffffff" />
-                <Text className="text-white font-headline-semibold text-base">
-                  {pdfLoading ? "Generando PDF..." : "Descargar PDF"}
-                </Text>
+          {d && (
+            <View className="bg-surface-container-low p-6 rounded-3xl mb-6">
+              <Text className="font-headline text-xl text-on-surface mb-1">¿Todo listo?</Text>
+              <Text className="text-on-surface-variant font-body text-sm leading-relaxed mt-1 mb-4">
+                Tu CV está optimizado para sistemas ATS. Puedes descargarlo en PDF de alta calidad.
+              </Text>
+              <GradientButton onPress={handleDownloadPdf} disabled={!currentResume || pdfLoading}>
+                <View className="flex-row items-center justify-center gap-2">
+                  <MaterialIcons name="file-download" size={20} color="#ffffff" />
+                  <Text className="text-white font-headline-semibold text-base">
+                    {pdfLoading ? "Generando PDF..." : "Descargar PDF"}
+                  </Text>
+                </View>
+              </GradientButton>
+            </View>
+          )}
+
+          {d && (
+            <View className="flex-row gap-4 mb-10">
+              <View className="flex-1 bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/10">
+                <MaterialIcons name="analytics" size={24} color="#0b55cf" style={{ marginBottom: 12 }} />
+                <Text className="text-[10px] font-body-bold text-primary uppercase tracking-wider mb-1">Impacto</Text>
+                <Text className="text-sm font-headline-semibold text-on-surface">Palabras clave detectadas</Text>
               </View>
-            </GradientButton>
-
-          </View>
-
-          <View className="flex-row gap-4 mb-10">
-            <View className="flex-1 bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/10">
-              <MaterialIcons name="analytics" size={24} color="#0b55cf" style={{ marginBottom: 12 }} />
-              <Text className="text-[10px] font-body-bold text-primary uppercase tracking-wider mb-1">Impacto</Text>
-              <Text className="text-sm font-headline-semibold text-on-surface">Palabras clave detectadas</Text>
+              <View className="flex-1 bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/10">
+                <MaterialIcons name="verified" size={24} color="#1a6c23" style={{ marginBottom: 12 }} />
+                <Text className="text-[10px] font-body-bold text-tertiary uppercase tracking-wider mb-1">Legibilidad</Text>
+                <Text className="text-sm font-headline-semibold text-on-surface">Excelente puntuación</Text>
+              </View>
             </View>
-            <View className="flex-1 bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/10">
-              <MaterialIcons name="verified" size={24} color="#1a6c23" style={{ marginBottom: 12 }} />
-              <Text className="text-[10px] font-body-bold text-tertiary uppercase tracking-wider mb-1">Legibilidad</Text>
-              <Text className="text-sm font-headline-semibold text-on-surface">Excelente puntuación</Text>
-            </View>
-          </View>
+          )}
         </View>
 
         {/* Templates */}
         <View className="-mx-6 mb-8">
           <View className="flex-row justify-between items-center mb-6 px-6">
-            <Text className="font-headline text-2xl tracking-tight text-on-surface">Seleccionar Plantilla</Text>
+            <Text className="font-headline text-2xl tracking-tight text-on-surface">
+              {d ? "Seleccionar Plantilla" : "Elige una plantilla para empezar"}
+            </Text>
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 16 }}>
-            {templatesList.map((template) => (
-              <Pressable key={template.id} onPress={() => {
-                setSelectedTemplate(template.id);
-                if (currentResume) updateMutation.mutate(template.id);
-              }}>
-                <View className="w-64">
-                  <View
-                    className={`aspect-[1/1.41] rounded-xl mb-4 overflow-hidden items-center justify-center relative ${
-                      selectedTemplate === template.id
-                        ? "border-2 border-primary"
-                        : "border border-outline-variant/20"
-                    }`}
-                  >
-                    {template.thumbnail_url ? (
-                      <Image source={{ uri: template.thumbnail_url }} className="w-full h-full object-cover opacity-75" />
-                    ) : (
-                      <View className="items-center justify-center flex-1 bg-surface-container-high">
-                        <MaterialIcons name="auto-awesome" size={36} color="#bac7de" />
-                        <Text className="text-on-surface-variant font-body text-xs mt-2">{template.name}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 16, paddingLeft: 24, paddingRight: 24 }}>
+            {TEMPLATES.map((template) => {
+              const isSelected = selectedTemplate === template.id;
+              return (
+                <Pressable
+                  key={template.id}
+                  onPress={() => handleSelectTemplate(template.id)}
+                >
+                  <View className="w-64">
+                    <View
+                      className={`aspect-[1/1.41] rounded-xl mb-4 overflow-hidden relative ${
+                        isSelected ? "border-2 border-primary" : "border border-outline-variant/20"
+                      }`}
+                    >
+                      {/* Template preview card visual */}
+                      <View className="flex-1 bg-white" style={{ padding: 0 }}>
+                        {/* Sidebar/header visual según la plantilla */}
+                        {template.id === "modern-beige" && (
+                          <View className="flex-1 flex-row">
+                            <View style={{ backgroundColor: "#f5f0eb", width: "35%", padding: 12, alignItems: "center" }}>
+                              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#cec2b4", marginBottom: 12 }} />
+                              <View style={{ height: 6, width: "100%", backgroundColor: "#cec2b4", borderRadius: 3, marginBottom: 4 }} />
+                              <View style={{ height: 6, width: "70%", backgroundColor: "#cec2b4", borderRadius: 3, marginBottom: 16 }} />
+                              <View style={{ height: 4, width: "100%", backgroundColor: "#cec2b4", borderRadius: 2, marginBottom: 4 }} />
+                              <View style={{ height: 4, width: "100%", backgroundColor: "#cec2b4", borderRadius: 2, marginBottom: 4 }} />
+                              <View style={{ height: 4, width: "60%", backgroundColor: "#cec2b4", borderRadius: 2 }} />
+                            </View>
+                            <View style={{ flex: 1, padding: 12 }}>
+                              <View style={{ height: 10, width: "80%", backgroundColor: "#e8ddd4", borderRadius: 2, marginBottom: 4 }} />
+                              <View style={{ height: 8, width: "50%", backgroundColor: "#f0e8e0", borderRadius: 2, marginBottom: 12 }} />
+                              <View style={{ height: 6, width: "100%", backgroundColor: "#f0e8e0", borderRadius: 2, marginBottom: 4 }} />
+                              <View style={{ height: 6, width: "90%", backgroundColor: "#f0e8e0", borderRadius: 2, marginBottom: 4 }} />
+                              <View style={{ height: 6, width: "70%", backgroundColor: "#f0e8e0", borderRadius: 2 }} />
+                            </View>
+                          </View>
+                        )}
+                        {template.id === "classic-ats" && (
+                          <View className="flex-1" style={{ padding: 16 }}>
+                            <View style={{ alignItems: "center", marginBottom: 12 }}>
+                              <View style={{ height: 12, width: "70%", backgroundColor: "#e0e0e0", borderRadius: 2, marginBottom: 4 }} />
+                              <View style={{ height: 8, width: "40%", backgroundColor: "#eeeeee", borderRadius: 2 }} />
+                            </View>
+                            <View style={{ height: 1, backgroundColor: "#000", marginBottom: 12 }} />
+                            <View style={{ height: 6, width: "100%", backgroundColor: "#f0f0f0", borderRadius: 2, marginBottom: 4 }} />
+                            <View style={{ height: 6, width: "85%", backgroundColor: "#f0f0f0", borderRadius: 2, marginBottom: 12 }} />
+                            <View style={{ height: 1, backgroundColor: "#000", marginBottom: 8 }} />
+                            <View style={{ height: 6, width: "60%", backgroundColor: "#f0f0f0", borderRadius: 2, marginBottom: 4 }} />
+                            <View style={{ height: 6, width: "50%", backgroundColor: "#f0f0f0", borderRadius: 2, marginBottom: 4 }} />
+                            <View style={{ height: 6, width: "75%", backgroundColor: "#f0f0f0", borderRadius: 2 }} />
+                          </View>
+                        )}
+                        {template.id === "elegant-dark" && (
+                          <View className="flex-1">
+                            <View style={{ backgroundColor: "#1a1a1a", padding: 16, alignItems: "center", borderBottomWidth: 3, borderBottomColor: "#d4af37" }}>
+                              <View style={{ height: 10, width: "70%", backgroundColor: "#333", borderRadius: 2, marginBottom: 4 }} />
+                              <View style={{ height: 8, width: "40%", backgroundColor: "#d4af37", borderRadius: 2 }} />
+                            </View>
+                            <View style={{ padding: 12 }}>
+                              <View style={{ height: 6, width: "100%", backgroundColor: "#f5f5f5", borderRadius: 2, marginBottom: 4 }} />
+                              <View style={{ height: 6, width: "80%", backgroundColor: "#f5f5f5", borderRadius: 2, marginBottom: 12 }} />
+                              <View style={{ height: 6, width: "60%", backgroundColor: "#f5f5f5", borderRadius: 2, marginBottom: 4 }} />
+                              <View style={{ height: 6, width: "50%", backgroundColor: "#f5f5f5", borderRadius: 2 }} />
+                            </View>
+                          </View>
+                        )}
                       </View>
-                    )}
-                    {selectedTemplate === template.id && (
-                      <View className="absolute inset-0 bg-white/40 items-center justify-center">
-                        <View className="bg-primary px-3 py-1 rounded-full">
-                          <Text className="text-white text-[10px] font-body-bold uppercase tracking-widest">Activo</Text>
+
+                      {isSelected && (
+                        <View className="absolute inset-0 bg-white/40 items-center justify-center">
+                          <View className="bg-primary px-3 py-1 rounded-full">
+                            <Text className="text-white text-[10px] font-body-bold uppercase tracking-widest">Activo</Text>
+                          </View>
                         </View>
+                      )}
+                      <View className="absolute inset-x-0 bottom-0 bg-primary/90 py-2 px-3">
+                        <Text className="text-white text-[10px] font-body-bold text-center uppercase tracking-wider">
+                          {d ? "Editar con esta plantilla" : "Usar esta plantilla"}
+                        </Text>
                       </View>
-                    )}
+                    </View>
+                    <Text className="font-headline-semibold text-on-surface">{template.name}</Text>
+                    <Text className="text-xs text-on-surface-variant font-body">{template.description}</Text>
                   </View>
-                  <Text className="font-headline-semibold text-on-surface">{template.name}</Text>
-                  <Text className="text-xs text-on-surface-variant font-body">{template.description}</Text>
-                </View>
-              </Pressable>
-            ))}
+                </Pressable>
+              );
+            })}
           </ScrollView>
         </View>
       </ScrollView>

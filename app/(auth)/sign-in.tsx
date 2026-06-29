@@ -13,14 +13,19 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const EMAIL_NOT_VERIFIED_PATTERN =
+  /email.*(not\s+)?verified|verify\s+your\s+email|unverified|correo.*(no\s+)?verific|verifica.*correo/i;
+
 export default function SignInScreen() {
-  const { signIn, signInWithOAuth, resetPassword } = useAuth();
+  const { signIn, signInWithOAuth, resetPassword, resendOtp } = useAuth();
   const params = useLocalSearchParams<{ error?: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [needsVerification, setNeedsVerification] = useState(false);
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     if (params.error) {
@@ -31,21 +36,46 @@ export default function SignInScreen() {
   async function handleSignIn() {
     if (!email.trim()) {
       setError("Ingresa tu correo electrónico");
+      setNeedsVerification(false);
       return;
     }
     if (!password) {
       setError("Ingresa tu contraseña");
+      setNeedsVerification(false);
       return;
     }
     setError("");
+    setNeedsVerification(false);
     setLoading(true);
     try {
       await signIn(email.trim(), password);
       router.replace("/(tabs)");
     } catch (e: any) {
-      setError(e.message);
+      const msg = e?.message ?? "";
+      setError(msg);
+      setNeedsVerification(EMAIL_NOT_VERIFIED_PATTERN.test(msg));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResendVerification() {
+    if (!email.trim()) {
+      setError("Ingresa tu correo primero");
+      return;
+    }
+    setResending(true);
+    try {
+      await resendOtp(email.trim());
+      setError("Te reenviamos el código de verificación. Revisa tu bandeja.");
+      setNeedsVerification(false);
+      router.replace(
+        `/(auth)/verify?email=${encodeURIComponent(email.trim())}` as any,
+      );
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setResending(false);
     }
   }
 
@@ -55,6 +85,7 @@ export default function SignInScreen() {
       return;
     }
     setError("");
+    setNeedsVerification(false);
     setLoading(true);
     try {
       await resetPassword(email.trim());
@@ -68,6 +99,7 @@ export default function SignInScreen() {
 
   async function handleOAuth(provider: string) {
     setError("");
+    setNeedsVerification(false);
     setOauthLoading(provider);
     try {
       await signInWithOAuth(provider);
@@ -126,8 +158,23 @@ export default function SignInScreen() {
             </View>
 
             {error ? (
-              <View className="bg-error-container p-4 rounded-xl">
+              <View className="bg-error-container p-4 rounded-xl gap-3">
                 <Text className="text-on-error-container font-body text-sm">{error}</Text>
+                {needsVerification && (
+                  <Pressable
+                    onPress={handleResendVerification}
+                    disabled={resending}
+                    className="self-start bg-primary px-4 py-2 rounded-lg active:opacity-80"
+                  >
+                    {resending ? (
+                      <ActivityIndicator size="small" color="#ffffff" />
+                    ) : (
+                      <Text className="text-on-primary font-body-bold text-sm">
+                        Reenviar código de verificación
+                      </Text>
+                    )}
+                  </Pressable>
+                )}
               </View>
             ) : null}
 

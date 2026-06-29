@@ -36,22 +36,36 @@ export async function generateCvSuggestion(resumeData: any) {
 export async function generateCvScore(resumeData: any): Promise<number> {
   if (!resumeData) return 0;
   let score = 40;
-  if (resumeData.fullName) score += 5;
-  if (resumeData.email) score += 5;
-  if (resumeData.phone) score += 3;
-  if (resumeData.location) score += 2;
-  if (resumeData.title) score += 5;
-  if (resumeData.summary && resumeData.summary.length > 30) score += 10;
-  const expCount = (resumeData.experience || []).filter((e: any) => e.position || e.company).length;
+
+  const nombre = resumeData.nombre || resumeData.nombreCompleto || "";
+  const apellido = resumeData.apellido || "";
+  const nombreCompleto = `${nombre} ${apellido}`.trim();
+
+  if (nombreCompleto) score += 5;
+  if (resumeData.correo || resumeData.email) score += 5;
+  if (resumeData.telefono || resumeData.phone) score += 3;
+  if (resumeData.ubicacion || resumeData.location) score += 2;
+  if (resumeData.profesion || resumeData.title) score += 5;
+  const summary = resumeData.resumen || resumeData.perfil || resumeData.summary || "";
+  if (summary.length > 30) score += 10;
+
+  const experiencias = resumeData.experiencias || resumeData.experience || [];
+  const expCount = experiencias.filter((e: any) => e.puesto || e.position || e.empresa || e.company).length;
   score += Math.min(expCount * 5, 15);
-  (resumeData.experience || []).forEach((exp: any) => {
-    if (exp.description && exp.description.length > 50) score += 3;
-    if (exp.startDate) score += 1;
+  experiencias.forEach((exp: any) => {
+    const logros = exp.logros || (exp.description ? [exp.description] : []);
+    const logrosText = logros.filter(Boolean).join(" ");
+    if (logrosText.length > 50) score += 3;
+    if (exp.fechas || exp.startDate) score += 1;
     if (exp.endDate) score += 1;
   });
-  const eduCount = (resumeData.education || []).filter((e: any) => e.degree || e.institution).length;
+
+  const educacion = resumeData.educacion || resumeData.education || [];
+  const eduCount = educacion.filter((e: any) => e.titulo || e.degree || e.institucion || e.institution).length;
   score += Math.min(eduCount * 5, 10);
-  const skillCount = (resumeData.skills || []).length;
-  score += Math.min(skillCount * 2, 10);
+
+  const skills = resumeData.habilidades || resumeData.skills || [];
+  score += Math.min(skills.length * 2, 10);
+
   return Math.min(Math.max(score, 0), 100);
 }

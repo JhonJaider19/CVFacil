@@ -53,7 +53,10 @@ function RootNavigator() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       {user ? (
-        <Stack.Screen name="(tabs)" />
+        <>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="editor" />
+        </>
       ) : (
         <Stack.Screen name="(auth)" />
       )}

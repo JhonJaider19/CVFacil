@@ -1,4 +1,4 @@
-import { styles } from "./styles";
+import { styles } from "./style";
 
 export const generateClassicATS = (data) => {
   // Datos por defecto (Placeholders) basados exactamente en la imagen de Camila Vargas

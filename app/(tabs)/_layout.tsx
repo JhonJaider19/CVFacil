@@ -10,7 +10,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: "Inicio" }} />
-      <Tabs.Screen name="editor" options={{ title: "Mis CVs" }} />
+      <Tabs.Screen name="resumes" options={{ title: "Mis CVs" }} />
       <Tabs.Screen name="templates" options={{ title: "Plantillas" }} />
       <Tabs.Screen name="assistant" options={{ title: "Entrevista" }} />
     </Tabs>
