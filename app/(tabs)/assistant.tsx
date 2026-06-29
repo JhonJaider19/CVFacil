@@ -18,6 +18,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -80,7 +83,9 @@ export default function AssistantScreen() {
   const currentResume = resumes?.[0];
 
   async function handleSend(content?: string) {
+    console.log("[assistant] handleSend called", { content, input, aiLoading });
     const text = (content || input).trim();
+    console.log("[assistant] handleSend text", { text, isEmpty: !text, isLoading: aiLoading });
     if (!text || aiLoading) return;
     setInput("");
 
@@ -233,155 +238,183 @@ export default function AssistantScreen() {
     <View className="flex-1 bg-surface">
       <GlassHeader />
 
-      <ScrollView
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
-        contentContainerStyle={{ paddingTop: 64 + STATUS_BAR_HEIGHT, paddingBottom: 32 }}
-        keyboardShouldPersistTaps="handled"
+        keyboardVerticalOffset={STATUS_BAR_HEIGHT}
       >
-        <View className="w-full max-w-6xl mx-auto px-6">
-          <Text className="font-headline text-3xl text-on-surface tracking-tight mb-2">
-            Asistente IA
-          </Text>
-          <Text className="text-on-surface-variant font-body text-lg mb-8">
-            Tu coach profesional con inteligencia artificial
-          </Text>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingTop: 64 + STATUS_BAR_HEIGHT, paddingBottom: 200 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="w-full max-w-6xl mx-auto px-6">
+            <Text className="font-headline text-3xl text-on-surface tracking-tight mb-2">
+              Asistente IA
+            </Text>
+            <Text className="text-on-surface-variant font-body text-lg mb-8">
+              Tu coach profesional con inteligencia artificial
+            </Text>
 
-          <View className="flex-row flex-wrap gap-4 mb-10">
-            {quickActions.map((action) => (
-              <Pressable
-                key={action.id}
-                className="w-full sm:flex-1 min-w-[280px]"
-                onPress={() => handleQuickAction(action.id)}
-              >
-                <LinearGradient
-                  colors={action.gradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  className="p-6 rounded-xl flex-row items-center gap-4"
+            <View className="flex-row flex-wrap gap-4 mb-10">
+              {quickActions.map((action) => (
+                <Pressable
+                  key={action.id}
+                  className="w-full sm:flex-1 min-w-[280px]"
+                  onPress={() => handleQuickAction(action.id)}
                 >
-                  <View className="w-12 h-12 rounded-xl bg-white/20 items-center justify-center">
+                  <LinearGradient
+                    colors={action.gradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    className="p-6 rounded-xl flex-row items-center gap-4"
+                  >
+                    <View className="w-12 h-12 rounded-xl bg-white/20 items-center justify-center">
+                      <MaterialIcons
+                        name={action.icon}
+                        size={24}
+                        color="#ffffff"
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-white font-headline text-lg">
+                        {action.title}
+                      </Text>
+                      <Text className="text-white/80 font-body text-sm">
+                        {action.desc}
+                      </Text>
+                    </View>
                     <MaterialIcons
-                      name={action.icon}
-                      size={24}
-                      color="#ffffff"
+                      name="arrow-forward"
+                      size={20}
+                      color="rgba(255,255,255,0.6)"
                     />
+                  </LinearGradient>
+                </Pressable>
+              ))}
+            </View>
+
+            <View className="mb-6">
+              <View className="flex-row items-center gap-3 mb-6">
+                <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center">
+                  <MaterialIcons name="chat" size={20} color="#0b55cf" />
+                </View>
+                <Text className="font-headline text-xl text-on-surface">
+                  Conversación
+                </Text>
+              </View>
+
+              {messages.map((msg) => (
+                <View key={msg.id} className="flex-row gap-3 mb-6">
+                  <View
+                    className={`w-10 h-10 rounded-full items-center justify-center ${msg.type === "ai" ? "bg-primary-container" : "bg-secondary-container"}`}
+                  >
+                    {msg.type === "ai" ? (
+                      <MaterialIcons name="smart-toy" size={20} color="#ffffff" />
+                    ) : (
+                      <MaterialIcons name="person" size={20} color="#ffffff" />
+                    )}
                   </View>
                   <View className="flex-1">
-                    <Text className="text-white font-headline text-lg">
-                      {action.title}
-                    </Text>
-                    <Text className="text-white/80 font-body text-sm">
-                      {action.desc}
+                    <View
+                      className={`p-4 rounded-2xl ${msg.type === "ai" ? "bg-white rounded-tl-none" : "bg-primary/5 rounded-tr-none"}`}
+                    >
+                      <Text className="text-on-surface font-body leading-relaxed">
+                        {msg.text}
+                      </Text>
+                    </View>
+                    <Text className="text-[11px] text-outline font-body-medium px-1 mt-1">
+                      {msg.type === "ai" ? "Asistente IA" : "Tú"} • {msg.time}
                     </Text>
                   </View>
-                  <MaterialIcons
-                    name="arrow-forward"
-                    size={20}
-                    color="rgba(255,255,255,0.6)"
-                  />
-                </LinearGradient>
-              </Pressable>
-            ))}
-          </View>
+                </View>
+              ))}
 
-          <View className="mb-6">
-            <View className="flex-row items-center gap-3 mb-6">
-              <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center">
-                <MaterialIcons name="chat" size={20} color="#0b55cf" />
-              </View>
-              <Text className="font-headline text-xl text-on-surface">
-                Conversación
-              </Text>
-            </View>
-
-            {messages.map((msg) => (
-              <View key={msg.id} className="flex-row gap-3 mb-6">
-                <View
-                  className={`w-10 h-10 rounded-full items-center justify-center ${msg.type === "ai" ? "bg-primary-container" : "bg-secondary-container"}`}
-                >
-                  {msg.type === "ai" ? (
+              {aiLoading && (
+                <View className="flex-row items-center gap-3 mb-6">
+                  <View className="w-10 h-10 rounded-full bg-primary-container items-center justify-center">
                     <MaterialIcons name="smart-toy" size={20} color="#ffffff" />
-                  ) : (
-                    <MaterialIcons name="person" size={20} color="#ffffff" />
-                  )}
-                </View>
-                <View className="flex-1">
-                  <View
-                    className={`p-4 rounded-2xl ${msg.type === "ai" ? "bg-white rounded-tl-none" : "bg-primary/5 rounded-tr-none"}`}
-                  >
-                    <Text className="text-on-surface font-body leading-relaxed">
-                      {msg.text}
-                    </Text>
                   </View>
-                  <Text className="text-[11px] text-outline font-body-medium px-1 mt-1">
-                    {msg.type === "ai" ? "Asistente IA" : "Tú"} • {msg.time}
-                  </Text>
+                  <View className="bg-white p-4 rounded-2xl rounded-tl-none">
+                    <ActivityIndicator size="small" color="#0b55cf" />
+                  </View>
                 </View>
-              </View>
-            ))}
-
-            {aiLoading && (
-              <View className="flex-row items-center gap-3 mb-6">
-                <View className="w-10 h-10 rounded-full bg-primary-container items-center justify-center">
-                  <MaterialIcons name="smart-toy" size={20} color="#ffffff" />
-                </View>
-                <View className="bg-white p-4 rounded-2xl rounded-tl-none">
-                  <ActivityIndicator size="small" color="#0b55cf" />
-                </View>
-              </View>
-            )}
+              )}
+            </View>
           </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
-          <View className="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/10">
-            <TextInput
-              className="text-on-surface font-body text-base min-h-[56px] border-b-2 pb-3"
-              placeholder="Escribe tu mensaje aquí..."
-              placeholderTextColor="#727785"
-              value={input}
-              onChangeText={setInput}
-              multiline
-              onFocus={() => setIsInputFocused(true)}
-              onBlur={() => setIsInputFocused(false)}
-              style={{
-                borderColor: isInputFocused
-                  ? "#0b55cf"
-                  : "rgba(193, 198, 214, 0.2)",
-              }}
-              onSubmitEditing={() => handleSend()}
-            />
-            <View className="flex-row items-center justify-between mt-3">
-              <View className="flex-row gap-2">
-                <Pressable
-                  className="bg-secondary-container px-3 py-1.5 rounded-xl"
-                  onPress={() => handleQuickAction("improve")}
-                >
-                  <Text className="text-[11px] font-body-bold text-secondary">
-                    Mejorar CV
-                  </Text>
-                </Pressable>
-                <Pressable
-                  className="bg-secondary-container px-3 py-1.5 rounded-xl"
-                  onPress={() => handleQuickAction("tips")}
-                >
-                  <Text className="text-[11px] font-body-bold text-secondary">
-                    Preparar entrevista
-                  </Text>
-                </Pressable>
-              </View>
-              <Pressable onPress={() => handleSend()}>
-                <LinearGradient
-                  colors={["#0b55cf", "#3870ea"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  className="w-12 h-12 rounded-xl items-center justify-center shadow-md shadow-primary/20 active:scale-95 transition-all"
-                >
-                  <MaterialIcons name="send" size={18} color="#ffffff" />
-                </LinearGradient>
+      {/* Input fijo al fondo de la pantalla (fuera del KAV) */}
+      <View
+        className="absolute bottom-0 left-0 right-0 px-6 pb-4 bg-surface"
+        style={{
+          borderTopWidth: 1,
+          borderTopColor: "rgba(193, 198, 214, 0.2)",
+          elevation: 12,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+        }}
+      >
+        <View className="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/10">
+          <TextInput
+            className="text-on-surface font-body text-base min-h-[56px] border-b-2 pb-3"
+            placeholder="Escribe tu mensaje aquí..."
+            placeholderTextColor="#727785"
+            value={input}
+            onChangeText={setInput}
+            multiline
+            onFocus={() => setIsInputFocused(true)}
+            onBlur={() => setIsInputFocused(false)}
+            style={{
+              borderColor: isInputFocused
+                ? "#0b55cf"
+                : "rgba(193, 198, 214, 0.2)",
+            }}
+            onSubmitEditing={() => handleSend()}
+          />
+          <View className="flex-row items-center justify-between mt-3">
+            <View className="flex-row gap-2">
+              <Pressable
+                className="bg-secondary-container px-3 py-1.5 rounded-xl"
+                onPress={() => handleQuickAction("improve")}
+              >
+                <Text className="text-[11px] font-body-bold text-secondary">
+                  Mejorar CV
+                </Text>
+              </Pressable>
+              <Pressable
+                className="bg-secondary-container px-3 py-1.5 rounded-xl"
+                onPress={() => handleQuickAction("tips")}
+              >
+                <Text className="text-[11px] font-body-bold text-secondary">
+                  Preparar entrevista
+                </Text>
               </Pressable>
             </View>
+            <Pressable
+              onPress={() => {
+                console.log("[assistant] send-button onPress fired");
+                handleSend();
+              }}
+              disabled={aiLoading}
+              hitSlop={20}
+              style={{ opacity: aiLoading ? 0.5 : 1 }}
+            >
+              <LinearGradient
+                colors={["#0b55cf", "#3870ea"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                className="w-12 h-12 rounded-xl items-center justify-center shadow-md shadow-primary/20 active:scale-95 transition-all"
+              >
+                <MaterialIcons name="send" size={18} color="#ffffff" />
+              </LinearGradient>
+            </Pressable>
           </View>
         </View>
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -451,6 +484,10 @@ function InterviewMode({
         await saveInterviewMessage(interview.id, "ai", intro);
       } catch (e: any) {
         if (cancelled) return;
+        Alert.alert(
+          "No se pudo iniciar la entrevista",
+          e?.message || "Verifica tu conexión e inténtalo de nuevo.",
+        );
         setInterviewMessages([
           {
             id: "err",
@@ -480,7 +517,9 @@ function InterviewMode({
   }
 
   async function handleSendInterview() {
+    console.log("[assistant] handleSendInterview called", { input, loading, interviewId, bootstrapping });
     const text = input.trim();
+    console.log("[assistant] handleSendInterview text", { text, isEmpty: !text, isLoading: loading });
     if (!text || loading || !interviewId) return;
     setInput("");
 
@@ -610,7 +649,10 @@ function InterviewMode({
 
   return (
     <View className="flex-1 bg-surface">
-      <View className="absolute top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl">
+      <View
+        className="absolute top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl"
+        style={{ paddingTop: STATUS_BAR_HEIGHT }}
+      >
         <View className="flex-row items-center justify-between px-6 h-16 border-b border-outline-variant/10">
           <View className="flex-row items-center gap-3">
             <Pressable
@@ -632,172 +674,199 @@ function InterviewMode({
         </View>
       </View>
 
-      <ScrollView
+<KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
-        contentContainerStyle={{ paddingTop: 64 + STATUS_BAR_HEIGHT, paddingBottom: 32 }}
-        keyboardShouldPersistTaps="handled"
+        keyboardVerticalOffset={STATUS_BAR_HEIGHT}
       >
-        <View className="w-full max-w-6xl mx-auto px-6">
-          <View className="flex-row justify-between mb-8">
-            <View className="flex-1 bg-surface-container-lowest p-4 rounded-xl mr-2 border border-outline-variant/10">
-              <View className="flex-row items-center gap-2 mb-1">
-                <MaterialIcons name="trending-up" size={16} color="#525f73" />
-                <Text className="text-[10px] font-body-bold text-on-surface-variant uppercase tracking-wider">
-                  Calificación
-                </Text>
-              </View>
-              <Text className="font-headline text-2xl text-on-surface">
-                {Math.round(score)}
-                <Text className="text-on-surface-variant font-body text-xs">
-                  /100
-                </Text>
-              </Text>
-            </View>
-            <View className="flex-1 bg-surface-container-lowest p-4 rounded-xl mr-2 border border-outline-variant/10">
-              <View className="flex-row items-center gap-2 mb-1">
-                <MaterialIcons name="timer" size={16} color="#525f73" />
-                <Text className="text-[10px] font-body-bold text-on-surface-variant uppercase tracking-wider">
-                  Tiempo
-                </Text>
-              </View>
-              <Text className="font-headline text-2xl text-on-surface">
-                {formatTime(timer)}
-              </Text>
-            </View>
-            <View className="flex-1 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10">
-              <View className="flex-row items-center gap-2 mb-1">
-                <MaterialIcons
-                  name="check-circle-outline"
-                  size={16}
-                  color="#525f73"
-                />
-                <Text className="text-[10px] font-body-bold text-on-surface-variant uppercase tracking-wider">
-                  Preguntas
-                </Text>
-              </View>
-              <Text className="font-headline text-2xl text-primary">
-                {Math.max(0, interviewMessages.length - 1)}
-              </Text>
-            </View>
-          </View>
-
-          <View className="mb-6">
-            {interviewMessages.map((msg) => (
-              <View key={msg.id} className="flex-row gap-3 mb-6">
-                <View
-                  className={`w-10 h-10 rounded-full items-center justify-center ${msg.type === "ai" ? "bg-primary-container" : "bg-secondary-container"}`}
-                >
-                  {msg.type === "ai" ? (
-                    <MaterialIcons name="smart-toy" size={20} color="#ffffff" />
-                  ) : (
-                    <MaterialIcons name="person" size={20} color="#ffffff" />
-                  )}
-                </View>
-                <View className="flex-1">
-                  <View
-                    className={`p-4 rounded-2xl ${msg.type === "ai" ? "bg-white rounded-tl-none" : "bg-primary/5 rounded-tr-none"}`}
-                  >
-                    <Text className="text-on-surface font-body leading-relaxed">
-                      {msg.text}
-                    </Text>
-                  </View>
-                  <Text className="text-[11px] text-outline font-body-medium px-1 mt-1">
-                    {msg.type === "ai" ? "Reclutador IA" : "Tú"} • {msg.time}
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingTop: 64 + STATUS_BAR_HEIGHT, paddingBottom: 200 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="w-full max-w-6xl mx-auto px-6">
+            <View className="flex-row justify-between mb-8">
+              <View className="flex-1 bg-surface-container-lowest p-4 rounded-xl mr-2 border border-outline-variant/10">
+                <View className="flex-row items-center gap-2 mb-1">
+                  <MaterialIcons name="trending-up" size={16} color="#525f73" />
+                  <Text className="text-[10px] font-body-bold text-on-surface-variant uppercase tracking-wider">
+                    Calificación
                   </Text>
                 </View>
+                <Text className="font-headline text-2xl text-on-surface">
+                  {Math.round(score)}
+                  <Text className="text-on-surface-variant font-body text-xs">
+                    /100
+                  </Text>
+                </Text>
               </View>
-            ))}
-
-            {loading && (
-              <View className="flex-row gap-3 mb-6 opacity-70">
-                <View className="w-10 h-10 rounded-full bg-primary-container items-center justify-center">
-                  <MaterialIcons name="smart-toy" size={20} color="#ffffff" />
+              <View className="flex-1 bg-surface-container-lowest p-4 rounded-xl mr-2 border border-outline-variant/10">
+                <View className="flex-row items-center gap-2 mb-1">
+                  <MaterialIcons name="timer" size={16} color="#525f73" />
+                  <Text className="text-[10px] font-body-bold text-on-surface-variant uppercase tracking-wider">
+                    Tiempo
+                  </Text>
                 </View>
-                <View className="flex-1">
-                  <View className="bg-white p-4 rounded-2xl rounded-tl-none">
-                    <Text className="text-on-surface font-body italic">
-                      <ActivityIndicator size="small" color="#0b55cf" />{" "}
-                      Analizando tu respuesta...
+                <Text className="font-headline text-2xl text-on-surface">
+                  {formatTime(timer)}
+                </Text>
+              </View>
+              <View className="flex-1 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10">
+                <View className="flex-row items-center gap-2 mb-1">
+                  <MaterialIcons
+                    name="check-circle-outline"
+                    size={16}
+                    color="#525f73"
+                  />
+                  <Text className="text-[10px] font-body-bold text-on-surface-variant uppercase tracking-wider">
+                    Preguntas
+                  </Text>
+                </View>
+                <Text className="font-headline text-2xl text-primary">
+                  {Math.max(0, interviewMessages.length - 1)}
+                </Text>
+              </View>
+            </View>
+
+            <View className="mb-6">
+              {interviewMessages.map((msg) => (
+                <View key={msg.id} className="flex-row gap-3 mb-6">
+                  <View
+                    className={`w-10 h-10 rounded-full items-center justify-center ${msg.type === "ai" ? "bg-primary-container" : "bg-secondary-container"}`}
+                  >
+                    {msg.type === "ai" ? (
+                      <MaterialIcons name="smart-toy" size={20} color="#ffffff" />
+                    ) : (
+                      <MaterialIcons name="person" size={20} color="#ffffff" />
+                    )}
+                  </View>
+                  <View className="flex-1">
+                    <View
+                      className={`p-4 rounded-2xl ${msg.type === "ai" ? "bg-white rounded-tl-none" : "bg-primary/5 rounded-tr-none"}`}
+                    >
+                      <Text className="text-on-surface font-body leading-relaxed">
+                        {msg.text}
+                      </Text>
+                    </View>
+                    <Text className="text-[11px] text-outline font-body-medium px-1 mt-1">
+                      {msg.type === "ai" ? "Reclutador IA" : "Tú"} • {msg.time}
                     </Text>
                   </View>
                 </View>
-              </View>
-            )}
-          </View>
+              ))}
 
-          <View className="flex-row items-center gap-3 mb-4">
-            <View className="flex-1">
-              <TextInput
-                className="bg-surface-container-lowest text-on-surface font-body text-base rounded-xl px-4 py-4 border"
-                placeholder={bootstrapping ? "Preparando entrevista..." : "Escribe tu respuesta..."}
-                placeholderTextColor="#727785"
-                value={input}
-                onChangeText={setInput}
-                multiline
-                editable={!bootstrapping && !!interviewId}
-                onFocus={() => setIsInterviewInputFocused(true)}
-                onBlur={() => setIsInterviewInputFocused(false)}
-                style={{
-                  borderColor: isInterviewInputFocused
-                    ? "#0b55cf"
-                    : "rgba(193, 198, 214, 0.2)",
-                }}
-                onSubmitEditing={handleSendInterview}
-              />
+              {loading && (
+                <View className="flex-row gap-3 mb-6 opacity-70">
+                  <View className="w-10 h-10 rounded-full bg-primary-container items-center justify-center">
+                    <MaterialIcons name="smart-toy" size={20} color="#ffffff" />
+                  </View>
+                  <View className="flex-1">
+                    <View className="bg-white p-4 rounded-2xl rounded-tl-none">
+                      <Text className="text-on-surface font-body italic">
+                        <ActivityIndicator size="small" color="#0b55cf" />{" "}
+                        Analizando tu respuesta...
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
             </View>
-            <Pressable onPress={handleSendInterview} disabled={bootstrapping || !interviewId}>
-              <LinearGradient
-                colors={["#0b55cf", "#3870ea"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                className="w-14 h-14 rounded-xl items-center justify-center shadow-md shadow-primary/20 active:scale-95 transition-all"
-                style={{ opacity: bootstrapping || !interviewId ? 0.5 : 1 }}
-              >
-                {bootstrapping ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <MaterialIcons name="arrow-upward" size={24} color="#ffffff" />
-                )}
-              </LinearGradient>
-            </Pressable>
-          </View>
 
+            <Pressable
+              className="flex-row items-center justify-center gap-2 py-3 mb-4 hover:bg-surface-container-low rounded-lg transition-colors"
+              onPress={() => {
+                const helpMsg: ChatMessage = {
+                  id: Date.now().toString(),
+                  type: "ai",
+                  text: "💡 **Consejo**: Usa el método STAR para estructurar tus respuestas:\n\n**S**ituación — Describe el contexto\n**T**area — Explica tu responsabilidad\n**A**cción — Detalla lo que hiciste\n**R**esultado — Muestra el impacto con datos\n\nEjemplo: \"En mi anterior trabajo (Situación), lideré la migración a la nube (Tarea), coordinando 5 equipos y rediseñando la arquitectura (Acción), logrando un 40% de reducción de costos (Resultado).\"",
+                  time: "Ahora",
+                };
+                setInterviewMessages((prev) => [...prev, helpMsg]);
+              }}
+            >
+              <MaterialIcons name="lightbulb" size={18} color="#0b55cf" />
+              <Text className="text-primary font-body-bold text-sm">
+                Ayuda de IA
+              </Text>
+            </Pressable>
+
+            <View className="flex-row justify-center mb-4">
+              <Pressable onPress={handleFinish} disabled={bootstrapping || !interviewId}>
+                <LinearGradient
+                  colors={["#ba1a1a", "#e03b3b"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  className="px-6 py-3 rounded-xl shadow-md shadow-error/20 active:scale-95 transition-all flex-row items-center gap-2"
+                  style={{ opacity: bootstrapping || !interviewId ? 0.5 : 1 }}
+                >
+                  <MaterialIcons name="assessment" size={18} color="#ffffff" />
+                  <Text className="text-white font-headline-semibold text-sm">
+                    Finalizar y ver Feedback
+                  </Text>
+                </LinearGradient>
+              </Pressable>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* Input fijo al fondo (fuera del KAV) */}
+      <View
+        className="absolute bottom-0 left-0 right-0 px-6 pb-4 bg-surface"
+        style={{
+          borderTopWidth: 1,
+          borderTopColor: "rgba(193, 198, 214, 0.2)",
+          elevation: 12,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+        }}
+      >
+        <View className="flex-row items-center gap-3">
+          <View className="flex-1">
+            <TextInput
+              className="bg-surface-container-lowest text-on-surface font-body text-base rounded-xl px-4 py-4 border"
+              placeholder={bootstrapping ? "Preparando entrevista..." : "Escribe tu respuesta..."}
+              placeholderTextColor="#727785"
+              value={input}
+              onChangeText={setInput}
+              multiline
+              editable={!bootstrapping && !!interviewId}
+              onFocus={() => setIsInterviewInputFocused(true)}
+              onBlur={() => setIsInterviewInputFocused(false)}
+              style={{
+                borderColor: isInterviewInputFocused
+                  ? "#0b55cf"
+                  : "rgba(193, 198, 214, 0.2)",
+              }}
+              onSubmitEditing={handleSendInterview}
+            />
+          </View>
           <Pressable
-            className="flex-row items-center justify-center gap-2 py-3 mb-8 hover:bg-surface-container-low rounded-lg transition-colors"
             onPress={() => {
-              const helpMsg: ChatMessage = {
-                id: Date.now().toString(),
-                type: "ai",
-                text: "💡 **Consejo**: Usa el método STAR para estructurar tus respuestas:\n\n**S**ituación — Describe el contexto\n**T**area — Explica tu responsabilidad\n**A**cción — Detalla lo que hiciste\n**R**esultado — Muestra el impacto con datos\n\nEjemplo: \"En mi anterior trabajo (Situación), lideré la migración a la nube (Tarea), coordinando 5 equipos y rediseñando la arquitectura (Acción), logrando un 40% de reducción de costos (Resultado).\"",
-                time: "Ahora",
-              };
-              setInterviewMessages((prev) => [...prev, helpMsg]);
+              console.log("[assistant] interview send-button onPress fired");
+              handleSendInterview();
             }}
+            disabled={bootstrapping || !interviewId || loading}
+            hitSlop={20}
+            style={{ opacity: bootstrapping || !interviewId || loading ? 0.5 : 1 }}
           >
-            <MaterialIcons name="lightbulb" size={18} color="#0b55cf" />
-            <Text className="text-primary font-body-bold text-sm">
-              Ayuda de IA
-            </Text>
+            <LinearGradient
+              colors={["#0b55cf", "#3870ea"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              className="w-14 h-14 rounded-xl items-center justify-center shadow-md shadow-primary/20 active:scale-95 transition-all"
+            >
+              {bootstrapping ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <MaterialIcons name="arrow-upward" size={24} color="#ffffff" />
+              )}
+            </LinearGradient>
           </Pressable>
-
-          <View className="flex-row justify-center">
-            <Pressable onPress={handleFinish} disabled={bootstrapping || !interviewId}>
-              <LinearGradient
-                colors={["#ba1a1a", "#e03b3b"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                className="px-6 py-3 rounded-xl shadow-md shadow-error/20 active:scale-95 transition-all flex-row items-center gap-2"
-                style={{ opacity: bootstrapping || !interviewId ? 0.5 : 1 }}
-              >
-                <MaterialIcons name="assessment" size={18} color="#ffffff" />
-                <Text className="text-white font-headline-semibold text-sm">
-                  Finalizar y ver Feedback
-                </Text>
-              </LinearGradient>
-            </Pressable>
-          </View>
         </View>
-      </ScrollView>
+      </View>
     </View>
   );
 }
